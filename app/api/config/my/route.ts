@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!peer) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'No configuration found' },
-        { status: 404 }
+        { status: 200 }
       );
     }
 

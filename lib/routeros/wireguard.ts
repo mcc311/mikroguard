@@ -11,28 +11,26 @@ const EXPIRATION_DAYS = parseInt(process.env.WG_EXPIRATION_DAYS || '90');
 export async function getAllPeers(): Promise<WireGuardPeer[]> {
   const client = await getRouterOSClient();
 
-  const response = await client.sendCommand([
-    '/interface/wireguard/peers/print',
-    `=.proplist=.id,name,public-key,allowed-address,comment,disabled`,
-    `=?interface=${WG_INTERFACE}`,
-  ]);
+  const peers = await client.get('/interface/wireguard/peers');
 
-  if (!response.data || response.data.length === 0) {
+  if (!peers || peers.length === 0) {
     return [];
   }
 
-  return response.data.map((item) => {
-    const ttl = parseTTLFromComment(item.comment || '');
-    return {
-      name: item.name || '',
-      publicKey: item['public-key'] || '',
-      allowedAddress: item['allowed-address'] || '',
-      comment: item.comment || '',
-      disabled: item.disabled === 'true',
-      createdAt: new Date(), // RouterOS doesn't track creation time
-      expiresAt: ttl ? fromUnixTime(ttl) : addDays(new Date(), EXPIRATION_DAYS),
-    };
-  });
+  return peers
+    .filter((item) => item.interface === WG_INTERFACE)
+    .map((item) => {
+      const ttl = parseTTLFromComment(item.comment || '');
+      return {
+        name: item.name || '',
+        publicKey: item['public-key'] || '',
+        allowedAddress: item['allowed-address'] || '',
+        comment: item.comment || '',
+        disabled: item.disabled === 'true' || item.disabled === true,
+        createdAt: new Date(), // RouterOS doesn't track creation time
+        expiresAt: ttl ? fromUnixTime(ttl) : addDays(new Date(), EXPIRATION_DAYS),
+      };
+    });
 }
 
 /**
@@ -56,14 +54,13 @@ export async function createPeer(
   const expiresAt = addDays(new Date(), EXPIRATION_DAYS);
   const ttlComment = `ttl-${getUnixTime(expiresAt)}`;
 
-  await client.sendCommand([
-    '/interface/wireguard/peers/add',
-    `=interface=${WG_INTERFACE}`,
-    `=name=${username}`,
-    `=public-key=${publicKey}`,
-    `=allowed-address=${allowedAddress}`,
-    `=comment=${ttlComment}`,
-  ]);
+  await client.put('/interface/wireguard/peers', {
+    interface: WG_INTERFACE,
+    name: username,
+    'public-key': publicKey,
+    'allowed-address': allowedAddress,
+    comment: ttlComment,
+  });
 }
 
 /**
@@ -72,34 +69,21 @@ export async function createPeer(
 export async function renewPeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
 
-  const peer = await getPeerByUsername(username);
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
-
   const expiresAt = addDays(new Date(), EXPIRATION_DAYS);
   const ttlComment = `ttl-${getUnixTime(expiresAt)}`;
 
   // Find peer ID
-  const response = await client.sendCommand([
-    '/interface/wireguard/peers/print',
-    `=.proplist=.id`,
-    `=?name=${username}`,
-    `=?interface=${WG_INTERFACE}`,
-  ]);
+  const peers = await client.get('/interface/wireguard/peers');
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
 
-  if (!response.data || response.data.length === 0) {
+  if (!peer) {
     throw new Error('Peer not found');
   }
 
-  const peerId = response.data[0]['.id'];
-
-  await client.sendCommand([
-    '/interface/wireguard/peers/set',
-    `=.id=${peerId}`,
-    `=comment=${ttlComment}`,
-    '=disabled=no',
-  ]);
+  await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
+    comment: ttlComment,
+    disabled: 'no',
+  });
 }
 
 /**
@@ -108,24 +92,16 @@ export async function renewPeer(username: string): Promise<void> {
 export async function disablePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
 
-  const response = await client.sendCommand([
-    '/interface/wireguard/peers/print',
-    `=.proplist=.id`,
-    `=?name=${username}`,
-    `=?interface=${WG_INTERFACE}`,
-  ]);
+  const peers = await client.get('/interface/wireguard/peers');
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
 
-  if (!response.data || response.data.length === 0) {
+  if (!peer) {
     throw new Error('Peer not found');
   }
 
-  const peerId = response.data[0]['.id'];
-
-  await client.sendCommand([
-    '/interface/wireguard/peers/set',
-    `=.id=${peerId}`,
-    '=disabled=yes',
-  ]);
+  await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
+    disabled: 'yes',
+  });
 }
 
 /**
@@ -134,24 +110,16 @@ export async function disablePeer(username: string): Promise<void> {
 export async function enablePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
 
-  const response = await client.sendCommand([
-    '/interface/wireguard/peers/print',
-    `=.proplist=.id`,
-    `=?name=${username}`,
-    `=?interface=${WG_INTERFACE}`,
-  ]);
+  const peers = await client.get('/interface/wireguard/peers');
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
 
-  if (!response.data || response.data.length === 0) {
+  if (!peer) {
     throw new Error('Peer not found');
   }
 
-  const peerId = response.data[0]['.id'];
-
-  await client.sendCommand([
-    '/interface/wireguard/peers/set',
-    `=.id=${peerId}`,
-    '=disabled=no',
-  ]);
+  await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
+    disabled: 'no',
+  });
 }
 
 /**
@@ -160,23 +128,14 @@ export async function enablePeer(username: string): Promise<void> {
 export async function deletePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
 
-  const response = await client.sendCommand([
-    '/interface/wireguard/peers/print',
-    `=.proplist=.id`,
-    `=?name=${username}`,
-    `=?interface=${WG_INTERFACE}`,
-  ]);
+  const peers = await client.get('/interface/wireguard/peers');
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
 
-  if (!response.data || response.data.length === 0) {
+  if (!peer) {
     throw new Error('Peer not found');
   }
 
-  const peerId = response.data[0]['.id'];
-
-  await client.sendCommand([
-    '/interface/wireguard/peers/remove',
-    `=.id=${peerId}`,
-  ]);
+  await client.delete(`/interface/wireguard/peers/${peer['.id']}`);
 }
 
 /**
@@ -239,15 +198,12 @@ function parseTTLFromComment(comment: string): number | null {
 export async function getServerPublicKey(): Promise<string> {
   const client = await getRouterOSClient();
 
-  const response = await client.sendCommand([
-    '/interface/wireguard/print',
-    `=.proplist=public-key`,
-    `=?name=${WG_INTERFACE}`,
-  ]);
+  const interfaces = await client.get('/interface/wireguard');
+  const wgInterface = interfaces.find((i) => i.name === WG_INTERFACE);
 
-  if (!response.data || response.data.length === 0) {
+  if (!wgInterface) {
     throw new Error('WireGuard interface not found');
   }
 
-  return response.data[0]['public-key'];
+  return wgInterface['public-key'];
 }

@@ -53,12 +53,12 @@ export async function authenticateUser(username: string, password: string): Prom
         let userAttributes: any = {};
 
         searchRes.on('searchEntry', (entry) => {
-          userDN = entry.objectName || null;
+          userDN = entry.objectName ? String(entry.objectName) : null;
           userAttributes = {
-            uid: entry.object.uid,
-            cn: entry.object.cn,
-            mail: entry.object.mail,
-            memberOf: entry.object.memberOf,
+            uid: (entry as any).attributes.find((a: any) => a.type === 'uid')?.values[0],
+            cn: (entry as any).attributes.find((a: any) => a.type === 'cn')?.values[0],
+            mail: (entry as any).attributes.find((a: any) => a.type === 'mail')?.values[0],
+            memberOf: (entry as any).attributes.find((a: any) => a.type === 'memberOf')?.values,
           };
         });
 

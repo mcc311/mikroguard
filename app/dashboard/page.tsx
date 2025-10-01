@@ -11,7 +11,7 @@ import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { TemplateEditor } from '@/components/TemplateEditor';
 import { WireGuardPeer } from '@/types';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Shield, Plus, RefreshCw, Settings } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Settings, Download } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -41,7 +41,13 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (data.success) {
-        setPeer(data.data);
+        // Convert date strings to Date objects
+        const peerData = {
+          ...data.data,
+          createdAt: new Date(data.data.createdAt),
+          expiresAt: new Date(data.data.expiresAt),
+        };
+        setPeer(peerData);
       } else {
         setPeer(null);
       }
@@ -97,6 +103,27 @@ export default function DashboardPage() {
       alert('Failed to renew config');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleDownloadConfig = async () => {
+    try {
+      const res = await fetch('/api/config/download');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${session?.user?.name || 'wireguard'}-config.conf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Failed to download config');
+      }
+    } catch (error) {
+      alert('Failed to download config');
     }
   };
 
@@ -175,6 +202,10 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Button onClick={handleDownloadConfig} disabled={actionLoading}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Config
+                    </Button>
                     <Button onClick={handleRenewConfig} disabled={actionLoading}>
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Renew (Extend 3 Months)
