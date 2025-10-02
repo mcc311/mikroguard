@@ -21,6 +21,7 @@ import { WireGuardPeer } from '@/types';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Shield, Plus, RefreshCw, PenLine, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -89,12 +90,12 @@ export default function DashboardPage() {
 
       if (data.success) {
         await fetchConfig();
-        alert('Configuration renewed successfully!');
+        toast.success('Configuration renewed successfully!');
       } else {
-        alert('Failed to renew config: ' + data.error);
+        toast.error('Failed to renew config: ' + data.error);
       }
     } catch (error) {
-      alert('Failed to renew config');
+      toast.error('Failed to renew config');
     } finally {
       setActionLoading(false);
     }
@@ -102,7 +103,7 @@ export default function DashboardPage() {
 
   const handleUpdateKey = async () => {
     if (!newPublicKey.trim()) {
-      alert('Please enter a valid public key');
+      toast.error('Please enter a valid public key');
       return;
     }
 
@@ -120,12 +121,12 @@ export default function DashboardPage() {
         await fetchConfig();
         setShowKeyDialog(false);
         setNewPublicKey('');
-        alert('Public key updated successfully!');
+        toast.success('Public key updated successfully!');
       } else {
-        alert('Failed to update key: ' + data.error);
+        toast.error('Failed to update key: ' + data.error);
       }
     } catch (error) {
-      alert('Failed to update key');
+      toast.error('Failed to update key');
     } finally {
       setActionLoading(false);
     }
@@ -137,8 +138,9 @@ export default function DashboardPage() {
       await navigator.clipboard.writeText(config);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast.success('Configuration copied to clipboard!');
     } catch (error) {
-      alert('Failed to copy to clipboard');
+      toast.error('Failed to copy to clipboard');
     }
   };
 

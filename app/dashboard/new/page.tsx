@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Shield, Copy, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function NewConfigPage() {
   const { data: session, status } = useSession();
@@ -42,7 +43,7 @@ export default function NewConfigPage() {
 
   const handleSubmitPublicKey = async () => {
     if (!publicKey.trim()) {
-      alert('Please enter your public key');
+      toast.error('Please enter your public key');
       return;
     }
 
@@ -59,11 +60,12 @@ export default function NewConfigPage() {
       if (data.success) {
         setGeneratedConfig(data.data.configFile);
         setStep(3);
+        toast.success('Configuration created successfully!');
       } else {
-        alert('Failed to create config: ' + data.error);
+        toast.error('Failed to create config: ' + data.error);
       }
     } catch (error) {
-      alert('Failed to create config');
+      toast.error('Failed to create config');
     } finally {
       setLoading(false);
     }
@@ -74,8 +76,9 @@ export default function NewConfigPage() {
       await navigator.clipboard.writeText(generatedConfig);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast.success('Configuration copied to clipboard!');
     } catch (error) {
-      alert('Failed to copy to clipboard');
+      toast.error('Failed to copy to clipboard');
     }
   };
 

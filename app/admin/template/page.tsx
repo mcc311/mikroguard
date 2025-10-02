@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Shield, ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface TemplateConfig {
   dns: string;
@@ -22,7 +23,6 @@ export default function TemplateConfigPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [config, setConfig] = useState<TemplateConfig>({
     dns: '1.1.1.1',
     allowedIPs: '0.0.0.0/0',
@@ -81,13 +81,12 @@ export default function TemplateConfigPage() {
       const data = await res.json();
 
       if (data.success) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        toast.success('Template saved successfully! New configurations will use these settings.');
       } else {
-        alert('Failed to save template: ' + data.error);
+        toast.error('Failed to save template: ' + data.error);
       }
     } catch (error) {
-      alert('Failed to save template');
+      toast.error('Failed to save template');
     } finally {
       setLoading(false);
     }
@@ -202,14 +201,6 @@ export default function TemplateConfigPage() {
                     Interval for keepalive packets (recommended: 25)
                   </p>
                 </div>
-
-                {saveSuccess && (
-                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p className="text-sm text-green-800 dark:text-green-200">
-                      ✓ Template saved successfully! New configurations will use these settings.
-                    </p>
-                  </div>
-                )}
 
                 <Button type="submit" className="w-full" disabled={loading}>
                   <Save className="w-4 h-4 mr-2" />
