@@ -5,11 +5,23 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PeerTable } from '@/components/PeerTable';
+import { StatsCardSkeleton, PeerTableSkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { WireGuardPeer } from '@/types';
-import { Shield, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
+import { Users, CheckCircle, Clock, AlertTriangle as AlertIcon, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { TIME_THRESHOLDS } from '@/lib/constants';
+import { toast } from 'sonner';
 import type { Session } from 'next-auth';
 
 interface ExtendedSession extends Session {
@@ -24,6 +36,10 @@ export default function AdminPage() {
   const [peers, setPeers] = useState<WireGuardPeer[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; username: string }>({
+    open: false,
+    username: '',
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -71,56 +87,147 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        alert(`Disabled ${data.data.expiredCount} expired peers`);
+        toast.success(`Disabled ${data.data.expiredCount} expired peers`, {
+          description: 'All expired VPN configurations have been automatically disabled',
+        });
         await fetchPeers();
+      } else {
+        toast.error('Failed to check expired peers', {
+          description: data.error || 'Please try again later',
+        });
       }
     } catch {
-      alert('Failed to check expired peers');
+      toast.error('Failed to check expired peers', {
+        description: 'Network error, please try again later',
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handlePeerAction = async (username: string, action: 'enable' | 'disable' | 'renew' | 'delete') => {
-    if (action === 'delete' && !confirm(`Are you sure you want to delete ${username}'s configuration?`)) {
+    if (action === 'delete') {
+      setDeleteDialog({ open: true, username });
       return;
     }
 
     setActionLoading(true);
+    const actionLabels = {
+      enable: 'Enable',
+      disable: 'Disable',
+      renew: 'Renew',
+    };
+    const label = actionLabels[action];
+
     try {
-      let res;
-      if (action === 'delete') {
-        res = await fetch(`/api/admin/peers/${username}`, {
-          method: 'DELETE',
-        });
-      } else {
-        res = await fetch(`/api/admin/peers/${username}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action }),
-        });
-      }
+      const res = await fetch(`/api/admin/peers/${username}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
 
       const data = await res.json();
 
       if (data.success) {
-        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful`);
+        toast.success(`${label} successful`, {
+          description: `Successfully ${action}d configuration for user ${username}`,
+        });
         await fetchPeers();
       } else {
-        alert(`Failed to ${action}: ` + data.error);
+        toast.error(`Failed to ${action}`, {
+          description: data.error || 'Please try again later',
+        });
       }
     } catch {
-      alert(`Failed to ${action} peer`);
+      toast.error(`Failed to ${action}`, {
+        description: 'Network error, please try again later',
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
-  if (status === 'loading' || loading) {
+  const confirmDelete = async () => {
+    const username = deleteDialog.username;
+    setDeleteDialog({ open: false, username: '' });
+    setActionLoading(true);
+
+    try {
+      const res = await fetch(`/api/admin/peers/${username}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success('Delete successful', {
+          description: `Successfully deleted configuration for user ${username}`,
+        });
+        await fetchPeers();
+      } else {
+        toast.error('Failed to delete', {
+          description: data.error || 'Please try again later',
+        });
+      }
+    } catch {
+      toast.error('Failed to delete', {
+        description: 'Network error, please try again later',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (status === 'loading') {
+    return <LoadingPage />;
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
+      <main className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+            </div>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Management Actions</CardTitle>
+                  </div>
+                  <Link href="/admin/template">
+                    <Button variant="outline" size="sm">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Template
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="flex gap-2">
+                <Button disabled>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+                <Button disabled variant="outline">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Check & Disable Expired
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>All Peers</CardTitle>
+                <CardDescription>Manage all WireGuard peer configurations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PeerTableSkeleton />
+              </CardContent>
+            </Card>
+          </div>
+      </main>
     );
   }
 
@@ -136,67 +243,45 @@ export default function AdminPage() {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">WireGuard Manager - Admin</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/template">
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Template Settings
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm">
-                My Dashboard
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={() => router.push('/api/auth/signout')}>
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Peers</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Peers</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{peers.length}</p>
+                <div className="text-3xl font-bold">{peers.length}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-green-600">{activePeers}</p>
+                <div className="text-3xl font-bold text-green-600">{activePeers}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Expiring Soon</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-600" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-yellow-600">{expiringSoon}</p>
+                <div className="text-3xl font-bold text-yellow-600">{expiringSoon}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Expired</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Expired</CardTitle>
+                <AlertIcon className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-red-600">{expiredPeers}</p>
+                <div className="text-3xl font-bold text-red-600">{expiredPeers}</div>
               </CardContent>
             </Card>
           </div>
@@ -204,8 +289,18 @@ export default function AdminPage() {
           {/* Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Management Actions</CardTitle>
-              <CardDescription>Administrative operations</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Management Actions</CardTitle>
+                  <CardDescription>Administrative operations</CardDescription>
+                </div>
+                <Link href="/admin/template">
+                  <Button variant="outline" size="sm">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Template Settings
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="flex gap-2">
               <Button onClick={fetchPeers} disabled={actionLoading}>
@@ -235,6 +330,31 @@ export default function AdminPage() {
           </Card>
         </div>
       </main>
-    </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Configuration?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the WireGuard configuration for user{' '}
+              <span className="font-semibold text-foreground">{deleteDialog.username}</span>?
+              <br />
+              <br />
+              This action cannot be undone. The user will need to create a new configuration to connect to the VPN again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

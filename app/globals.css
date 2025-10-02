@@ -144,4 +144,11 @@
   select {
     @apply transition-all duration-200 ease-in-out;
   }
+
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, hsl(var(--foreground) / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
 }

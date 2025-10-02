@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { LoadingPage } from '@/components/loading-skeletons';
 
 export default function Home() {
   const router = useRouter();
@@ -16,9 +17,5 @@ export default function Home() {
     }
   }, [status, router]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p>Loading...</p>
-    </div>
-  );
+  return <LoadingPage />;
 }

@@ -3,19 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import type { Session } from 'next-auth';
-
-interface ExtendedSession extends Session {
-  user: Session['user'] & {
-    isAdmin?: boolean;
-  };
-}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +26,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { WireGuardPeer } from '@/types';
+import { DashboardCardSkeleton, ConfigDisplaySkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -42,7 +34,7 @@ import { toast } from 'sonner';
 import { UI_TIMEOUTS, TIME_THRESHOLDS } from '@/lib/constants';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [peer, setPeer] = useState<WireGuardPeer | null>(null);
   const [config, setConfig] = useState<string | null>(null);
@@ -187,11 +179,18 @@ export default function DashboardPage() {
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading') {
+    return <LoadingPage />;
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <DashboardCardSkeleton />
+          <ConfigDisplaySkeleton />
+        </div>
+      </main>
     );
   }
 
@@ -203,100 +202,144 @@ export default function DashboardPage() {
   const isExpired = peer && peer.expiresAt && peer.expiresAt.getTime() < Date.now();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">WireGuard Manager</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {session?.user?.name}
-            </span>
-            {(session as ExtendedSession | null)?.user?.isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm">
-                  Admin Panel
-                </Button>
-              </Link>
-            )}
-            <Button variant="outline" size="sm" onClick={() => router.push('/api/auth/signout')}>
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Status Card */}
-          <Card>
+          <Card className="relative overflow-hidden">
+            {/* Status Indicator Bar */}
+            {peer && (
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-1 ${
+                  peer.disabled
+                    ? 'bg-gray-400'
+                    : isExpired
+                    ? 'bg-red-500'
+                    : isExpiringSoon
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`}
+              />
+            )}
             <CardHeader>
-              <CardTitle>Configuration Status</CardTitle>
-              <CardDescription>Your WireGuard VPN configuration</CardDescription>
+              <CardTitle>VPN Configuration</CardTitle>
+              <CardDescription>Your WireGuard connection details</CardDescription>
             </CardHeader>
             <CardContent>
               {peer ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <Badge variant={peer.disabled ? 'destructive' : 'default'}>
-                        {peer.disabled ? 'Disabled' : 'Active'}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">IP Address</p>
-                      <p className="font-mono">{peer.allowedAddress}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Expires</p>
-                      <p className={isExpired ? 'text-red-500' : isExpiringSoon ? 'text-yellow-500' : ''}>
-                        {format(peer.expiresAt, 'yyyy-MM-dd HH:mm:ss')}
-                        <span className="text-xs block text-muted-foreground">
-                          {formatDistanceToNow(peer.expiresAt, { addSuffix: true })}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="col-span-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">Public Key</p>
+                <div className="space-y-6">
+                  {/* Key Information Grid */}
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    {/* IP Address with Copy */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">IP Address</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-lg font-mono font-semibold">{peer.allowedAddress}</code>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-6 w-6"
                           onClick={() => {
-                            setNewPublicKey(peer.publicKey);
-                            setShowKeyDialog(true);
+                            navigator.clipboard.writeText(peer.allowedAddress);
+                            toast.success('IP address copied!');
                           }}
                         >
-                          <PenLine className="w-4 h-4" />
+                          <Copy className="h-3 w-3" />
                         </Button>
                       </div>
-                      <p className="font-mono text-xs break-all bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        {peer.publicKey}
-                      </p>
+                    </div>
+
+                    {/* Expiration with Countdown */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Expires</p>
+                      <div>
+                        <p
+                          className={`text-lg font-semibold ${
+                            isExpired ? 'text-red-600' : isExpiringSoon ? 'text-yellow-600' : 'text-foreground'
+                          }`}
+                        >
+                          {formatDistanceToNow(peer.expiresAt, { addSuffix: true })}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{format(peer.expiresAt, 'MMM dd, yyyy HH:mm')}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleRenewConfig} disabled={actionLoading}>
+
+                  {/* Public Key Section */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Public Key</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setNewPublicKey(peer.publicKey);
+                          setShowKeyDialog(true);
+                        }}
+                        className="h-7 text-xs"
+                      >
+                        <PenLine className="w-3 h-3 mr-1" />
+                        Update
+                      </Button>
+                    </div>
+                    <div className="relative group">
+                      <code className="block font-mono text-xs break-all bg-muted/50 p-3 rounded border">
+                        {peer.publicKey}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7"
+                        onClick={() => {
+                          navigator.clipboard.writeText(peer.publicKey);
+                          toast.success('Public key copied!');
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                    <Button onClick={handleRenewConfig} disabled={actionLoading} className="flex-1" size="lg">
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Renew (Extend 3 Months)
+                      Renew Configuration
                     </Button>
-                    <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} disabled={actionLoading}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Configuration
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setNewPublicKey(peer.publicKey);
+                        setShowKeyDialog(true);
+                      }}
+                      disabled={actionLoading}
+                      size="lg"
+                    >
+                      <PenLine className="w-4 h-4 mr-2" />
+                      Update Key
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                      disabled={actionLoading}
+                      size="lg"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    You don&apos;t have a WireGuard configuration yet
+                <div className="text-center py-12">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <Shield className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">No VPN Configuration</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                    You haven&apos;t created a WireGuard configuration yet. Create one now to get started with secure VPN
+                    access.
                   </p>
                   <Link href="/dashboard/new">
-                    <Button>
+                    <Button size="lg">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Configuration
                     </Button>
@@ -312,14 +355,10 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Your Configuration</CardTitle>
-                    <CardDescription>Copy this configuration to your WireGuard client</CardDescription>
+                    <CardTitle>Configuration File</CardTitle>
+                    <CardDescription>Copy this to your WireGuard client</CardDescription>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyConfig}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleCopyConfig}>
                     {copied ? (
                       <>
                         <Check className="w-4 h-4 mr-2" />
@@ -335,11 +374,9 @@ export default function DashboardPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Textarea
-                  value={config}
-                  readOnly
-                  className="font-mono text-xs h-64 resize-none"
-                />
+                <pre className="font-mono text-xs bg-muted/50 p-4 rounded border overflow-x-auto">
+                  <code>{config}</code>
+                </pre>
               </CardContent>
             </Card>
           )}
@@ -408,6 +445,6 @@ export default function DashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

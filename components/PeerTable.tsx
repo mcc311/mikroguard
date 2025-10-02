@@ -4,8 +4,16 @@ import { WireGuardPeer } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
-import { RefreshCw, Ban, Play, Trash2 } from 'lucide-react';
+import { RefreshCw, Ban, Play, Trash2, MoreVertical, Copy } from 'lucide-react';
 
 interface PeerTableProps {
   peers: WireGuardPeer[];
@@ -34,78 +42,97 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
             <TableHead>Status</TableHead>
             <TableHead>Expiration</TableHead>
             <TableHead>Public Key</TableHead>
-            {showActions && <TableHead>Actions</TableHead>}
+            {showActions && <TableHead className="w-[70px]"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {peers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={showActions ? 6 : 5} className="text-center text-muted-foreground">
-                No peers found
+              <TableCell colSpan={showActions ? 6 : 5} className="h-24 text-center">
+                <p className="text-muted-foreground">No peers found</p>
               </TableCell>
             </TableRow>
           ) : (
             peers.map((peer) => {
               const expirationStatus = getExpirationStatus(peer.expiresAt);
               return (
-                <TableRow key={peer.name}>
+                <TableRow key={peer.name} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{peer.name}</TableCell>
-                  <TableCell className="font-mono text-sm">{peer.allowedAddress}</TableCell>
                   <TableCell>
-                    <Badge variant={peer.disabled ? 'destructive' : 'default'}>
+                    <div className="flex items-center gap-2">
+                      <code className="font-mono text-sm">{peer.allowedAddress}</code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => {
+                          navigator.clipboard.writeText(peer.allowedAddress);
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={peer.disabled ? 'secondary' : 'default'}
+                      className={peer.disabled ? '' : 'bg-green-500 hover:bg-green-600 text-white'}
+                    >
                       {peer.disabled ? 'Disabled' : 'Active'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={expirationStatus.variant}>
-                      {expirationStatus.label}
-                    </Badge>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(peer.expiresAt, { addSuffix: true })}
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={expirationStatus.variant} className="w-fit">
+                        {expirationStatus.label}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(peer.expiresAt, { addSuffix: true })}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-xs">
-                    {peer.publicKey.substring(0, 20)}...
+                  <TableCell>
+                    <code className="font-mono text-xs text-muted-foreground">
+                      {peer.publicKey.substring(0, 16)}...
+                    </code>
                   </TableCell>
                   {showActions && onAction && (
                     <TableCell>
-                      <div className="flex gap-1">
-                        {peer.disabled ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onAction(peer.name, 'enable')}
-                            title="Enable"
-                          >
-                            <Play className="w-4 h-4" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
                           </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onAction(peer.name, 'disable')}
-                            title="Disable"
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {peer.disabled ? (
+                            <DropdownMenuItem onClick={() => onAction(peer.name, 'enable')}>
+                              <Play className="mr-2 h-4 w-4" />
+                              Enable
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => onAction(peer.name, 'disable')}>
+                              <Ban className="mr-2 h-4 w-4" />
+                              Disable
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => onAction(peer.name, 'renew')}>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Renew
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onAction(peer.name, 'delete')}
+                            className="text-destructive focus:text-destructive"
                           >
-                            <Ban className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onAction(peer.name, 'renew')}
-                          title="Renew"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => onAction(peer.name, 'delete')}
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   )}
                 </TableRow>

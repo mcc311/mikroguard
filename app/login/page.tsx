@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Shield } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield, User, Lock, AlertCircle, Loader2 } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -43,48 +44,80 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-2">
-            <Shield className="w-6 h-6 text-primary-foreground" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
+      {/* Grid Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+
+      {/* Floating Orbs */}
+      <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+      <Card className="w-full max-w-md relative z-10 border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
+        <CardHeader className="space-y-3 pb-6">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+              <Shield className="w-8 h-8 text-primary-foreground" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">WireGuard Manager</CardTitle>
-          <CardDescription className="text-center">
-            Sign in with your LDAP credentials
-          </CardDescription>
+          <div className="text-center space-y-2">
+            <CardTitle className="text-3xl font-bold tracking-tight">WireGuard Manager</CardTitle>
+            <CardDescription className="text-base">
+              Sign in with your LDAP credentials to manage VPN configurations
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-              />
+              <Label htmlFor="username" className="text-sm font-medium">
+                Username
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoFocus
+                  className="pl-10 h-11"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pl-10 h-11"
+                />
+              </div>
             </div>
             {error && (
-              <div className="text-sm text-red-500 text-center">
-                {error}
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
         </CardContent>
@@ -95,19 +128,27 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1 flex flex-col items-center">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-2">
-              <Shield className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-center">WireGuard Manager</CardTitle>
-            <CardDescription className="text-center">Loading...</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+          <Card className="w-full max-w-md relative z-10 border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
+            <CardHeader className="space-y-3 pb-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-8 h-8 text-primary-foreground" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <CardTitle className="text-3xl font-bold tracking-tight">WireGuard Manager</CardTitle>
+                <CardDescription className="text-base">Loading...</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
