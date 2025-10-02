@@ -211,7 +211,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Expires</p>
                       <p className={isExpired ? 'text-red-500' : isExpiringSoon ? 'text-yellow-500' : ''}>
-                        {format(peer.expiresAt, 'PPP')}
+                        {format(peer.expiresAt, 'yyyy-MM-dd HH:mm:ss')}
                         <span className="text-xs block text-muted-foreground">
                           {formatDistanceToNow(peer.expiresAt, { addSuffix: true })}
                         </span>
