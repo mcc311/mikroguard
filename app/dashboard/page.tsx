@@ -221,16 +221,12 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground mb-4">
                     You don't have a WireGuard configuration yet
                   </p>
-                  <Button
-                    onClick={() => {
-                      const pk = prompt('Enter your WireGuard public key:');
-                      if (pk) handleCreateConfig(pk);
-                    }}
-                    disabled={actionLoading}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Configuration
-                  </Button>
+                  <Link href="/dashboard/new">
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Configuration
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>
