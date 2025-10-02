@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +41,6 @@ interface ExtendedSession extends Session {
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [peers, setPeers] = useState<WireGuardPeer[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -56,14 +54,6 @@ export default function AdminPage() {
     currentKey: '',
   });
   const [newPublicKey, setNewPublicKey] = useState('');
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && !(session as ExtendedSession | null)?.user?.isAdmin) {
-      router.push('/dashboard');
-    }
-  }, [status, session, router]);
 
   useEffect(() => {
     if (status === 'authenticated' && (session as ExtendedSession | null)?.user?.isAdmin) {

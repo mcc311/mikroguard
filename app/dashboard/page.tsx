@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +34,6 @@ import { UI_TIMEOUTS, TIME_THRESHOLDS } from '@/lib/constants';
 
 export default function DashboardPage() {
   const { status } = useSession();
-  const router = useRouter();
   const [peer, setPeer] = useState<WireGuardPeer | null>(null);
   const [config, setConfig] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,12 +42,6 @@ export default function DashboardPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newPublicKey, setNewPublicKey] = useState('');
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
 
   useEffect(() => {
     if (status === 'authenticated') {
