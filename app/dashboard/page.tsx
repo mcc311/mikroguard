@@ -17,9 +17,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { WireGuardPeer } from '@/types';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Shield, Plus, RefreshCw, PenLine, Copy, Check } from 'lucide-react';
+import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -31,6 +41,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newPublicKey, setNewPublicKey] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -144,6 +155,30 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteConfig = async () => {
+    setShowDeleteDialog(false);
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/config/my', {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setPeer(null);
+        setConfig(null);
+        toast.success('Configuration deleted successfully');
+      } else {
+        toast.error('Failed to delete config: ' + data.error);
+      }
+    } catch (error) {
+      toast.error('Failed to delete config');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -240,6 +275,10 @@ export default function DashboardPage() {
                     <Button onClick={handleRenewConfig} disabled={actionLoading}>
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Renew (Extend 3 Months)
+                    </Button>
+                    <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} disabled={actionLoading}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Configuration
                     </Button>
                   </div>
                 </div>
@@ -339,6 +378,28 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Configuration?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete your WireGuard configuration? This action cannot be undone.
+              You will need to create a new configuration to connect to the VPN again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfig}
+              className="bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
