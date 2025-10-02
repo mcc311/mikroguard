@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { getPeerByUsername, getServerPublicKey } from '@/lib/routeros/wireguard';
-import { buildConfigFile, getDefaultTemplate } from '@/lib/wireguard/config-builder';
+import { getPeerByUsername } from '@/lib/routeros/wireguard';
+import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { generateQRCode } from '@/lib/wireguard/qrcode';
 import { WireGuardConfig, ApiResponse } from '@/types';
+import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
 
 /**
  * GET /api/config/qr
@@ -15,10 +16,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -26,25 +24,15 @@ export async function GET(request: NextRequest) {
     // Get peer
     const peer = await getPeerByUsername(username);
     if (!peer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'No configuration found' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('No configuration found');
     }
 
     // Build configuration
-    const template = getDefaultTemplate();
-    const serverPublicKey = await getServerPublicKey().catch(() => process.env.WG_SERVER_PUBLIC_KEY || '');
+    const serverPublicKey = await getServerPublicKeyOrFallback();
 
     const config: WireGuardConfig = {
       username,
-      privateKey: 'YOUR_PRIVATE_KEY_HERE',
-      address: peer.allowedAddress,
-      dns: template.dns || '1.1.1.1',
-      publicKey: serverPublicKey,
-      allowedIPs: template.allowedIPs || [],
-      endpoint: template.endpoint || '',
-      persistentKeepalive: template.persistentKeepalive || 25,
+      ...buildConfigWithDefaults({}, peer.allowedAddress, serverPublicKey),
     };
 
     const configFile = buildConfigFile(config);
@@ -56,9 +44,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to generate QR code:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to generate QR code' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to generate QR code');
   }
 }

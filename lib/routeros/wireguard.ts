@@ -1,9 +1,10 @@
 import { getRouterOSClient } from './client';
 import { WireGuardPeer } from '@/types';
 import { addDays, getUnixTime, fromUnixTime } from 'date-fns';
+import { config } from '@/lib/config';
 
-const WG_INTERFACE = process.env.WG_INTERFACE_NAME || 'wireguard1';
-const EXPIRATION_DAYS = parseInt(process.env.WG_EXPIRATION_DAYS || '90');
+const WG_INTERFACE = config.wireguard.interfaceName;
+const EXPIRATION_DAYS = config.wireguard.expirationDays;
 
 /**
  * Get all WireGuard peers from RouterOS
@@ -160,7 +161,7 @@ export async function deletePeer(username: string): Promise<void> {
  * Get next available IP address in subnet
  */
 export async function getNextAvailableIP(): Promise<string> {
-  const subnet = process.env.WG_SUBNET || '10.10.10.0/24';
+  const subnet = config.wireguard.subnet;
   const [network, cidr] = subnet.split('/');
   const [a, b, c, d] = network.split('.').map(Number);
 
@@ -169,11 +170,13 @@ export async function getNextAvailableIP(): Promise<string> {
     peers.map((peer) => peer.allowedAddress.split('/')[0])
   );
 
-  // Start from .2 (assuming .1 is the server)
-  for (let i = 2; i < 254; i++) {
+  const { startIP, endIP, cidrSuffix } = config.wireguard.ipAllocation;
+
+  // Iterate through available IP range
+  for (let i = startIP; i <= endIP; i++) {
     const ip = `${a}.${b}.${c}.${i}`;
     if (!usedIPs.has(ip)) {
-      return `${ip}/32`;
+      return `${ip}${cidrSuffix}`;
     }
   }
 

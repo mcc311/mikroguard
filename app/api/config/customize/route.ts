@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { getPeerByUsername, getServerPublicKey } from '@/lib/routeros/wireguard';
+import { getPeerByUsername } from '@/lib/routeros/wireguard';
 import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
+import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
 
 /**
  * POST /api/config/customize
@@ -14,10 +15,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -25,28 +23,18 @@ export async function POST(request: NextRequest) {
     // Check if user has a config
     const existingPeer = await getPeerByUsername(username);
     if (!existingPeer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'No configuration found. Please create one first.' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('No configuration found. Please create one first.');
     }
 
     // Parse request body for custom configuration
     const body = await request.json();
-    const { dns, allowedIPs, endpoint, persistentKeepalive } = body;
 
     // Get server public key
-    const serverPublicKey = await getServerPublicKey().catch(() => process.env.WG_SERVER_PUBLIC_KEY || '');
+    const serverPublicKey = await getServerPublicKeyOrFallback();
 
     const config: WireGuardConfig = {
       username,
-      privateKey: 'YOUR_PRIVATE_KEY_HERE',
-      address: existingPeer.allowedAddress,
-      dns: dns || '1.1.1.1',
-      publicKey: serverPublicKey,
-      allowedIPs: allowedIPs || ['0.0.0.0/0'],
-      endpoint: endpoint || '',
-      persistentKeepalive: persistentKeepalive || 25,
+      ...buildConfigWithDefaults(body, existingPeer.allowedAddress, serverPublicKey),
     };
 
     const configFile = buildConfigFile(config);
@@ -60,9 +48,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to generate custom config:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to generate configuration' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to generate configuration');
   }
 }

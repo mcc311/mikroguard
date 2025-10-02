@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername, deletePeer, disablePeer, enablePeer, renewPeer } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
+import { jsonResponse } from '@/lib/api-helpers';
+import { HTTP_STATUS } from '@/lib/constants';
 
 /**
  * GET /api/admin/peers/[username]
@@ -16,17 +18,14 @@ export async function GET(
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const isAdmin = (session.user as any).isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -34,10 +33,7 @@ export async function GET(
     const peer = await getPeerByUsername(username);
 
     if (!peer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Peer not found' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('Peer not found');
     }
 
     return NextResponse.json<ApiResponse>({
@@ -46,10 +42,7 @@ export async function GET(
     });
   } catch (error) {
     console.error('Failed to get peer:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to get peer' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to get peer');
   }
 }
 
@@ -65,17 +58,14 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const isAdmin = (session.user as any).isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -88,10 +78,7 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Failed to delete peer:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to delete peer' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to delete peer');
   }
 }
 
@@ -107,17 +94,14 @@ export async function PATCH(
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const isAdmin = (session.user as any).isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -136,10 +120,7 @@ export async function PATCH(
         await renewPeer(username);
         break;
       default:
-        return NextResponse.json<ApiResponse>(
-          { success: false, error: 'Invalid action' },
-          { status: 400 }
-        );
+        return jsonResponse.badRequest('Invalid action');
     }
 
     const updatedPeer = await getPeerByUsername(username);
@@ -150,9 +131,6 @@ export async function PATCH(
     });
   } catch (error) {
     console.error('Failed to update peer:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to update peer' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to update peer');
   }
 }

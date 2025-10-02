@@ -1,4 +1,5 @@
 import { checkExpiredPeers } from '../routeros/wireguard';
+import { config } from '@/lib/config';
 
 /**
  * Check and disable expired WireGuard peers
@@ -25,9 +26,8 @@ export async function runExpirationCheck(): Promise<void> {
  * Can also be used by external cron services (e.g., cron-job.org)
  */
 export async function handleCronRequest(authToken?: string): Promise<{ success: boolean; message: string }> {
-  // Verify auth token if provided
-  const expectedToken = process.env.CRON_SECRET;
-  if (expectedToken && authToken !== expectedToken) {
+  // Verify auth token
+  if (authToken !== config.cron.secret) {
     return { success: false, message: 'Unauthorized' };
   }
 

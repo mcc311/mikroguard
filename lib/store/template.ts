@@ -3,6 +3,8 @@
  * This persists across requests in the Node.js runtime
  */
 
+import { config } from '@/lib/config';
+
 interface TemplateConfig {
   dns: string;
   allowedIPs: string[];
@@ -11,12 +13,12 @@ interface TemplateConfig {
 }
 
 // Global variable persists in memory during the Node.js process
-// Initialized from environment variables
+// Initialized from configuration
 let globalTemplate: TemplateConfig = {
-  dns: process.env.WG_DNS || '1.1.1.1',
-  allowedIPs: process.env.WG_DEFAULT_ALLOWED_IPS?.split(',').map(ip => ip.trim()) || ['0.0.0.0/0'],
-  endpoint: process.env.WG_ENDPOINT || '',
-  persistentKeepalive: parseInt(process.env.WG_PERSISTENT_KEEPALIVE || '25'),
+  dns: config.wireguard.dns,
+  allowedIPs: config.wireguard.allowedIPs,
+  endpoint: config.wireguard.endpoint,
+  persistentKeepalive: config.wireguard.persistentKeepalive,
 };
 
 export function getGlobalTemplate(): TemplateConfig {

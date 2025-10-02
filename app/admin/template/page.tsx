@@ -23,6 +23,7 @@ export default function TemplateConfigPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  // NOTE: These UI defaults should match the server-side defaults in @/lib/config
   const [config, setConfig] = useState<TemplateConfig>({
     dns: '1.1.1.1',
     allowedIPs: '0.0.0.0/0',

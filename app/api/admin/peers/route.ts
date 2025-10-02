@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getAllPeers } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
+import { jsonResponse } from '@/lib/api-helpers';
+import { HTTP_STATUS } from '@/lib/constants';
 
 /**
  * GET /api/admin/peers
@@ -13,17 +15,14 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const isAdmin = (session.user as any).isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -35,9 +34,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to get peers:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to get peers' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to get peers');
   }
 }

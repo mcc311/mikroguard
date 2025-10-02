@@ -32,6 +32,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { UI_TIMEOUTS, TIME_THRESHOLDS } from '@/lib/constants';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -148,7 +149,7 @@ export default function DashboardPage() {
     try {
       await navigator.clipboard.writeText(config);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
       toast.success('Configuration copied to clipboard!');
     } catch (error) {
       toast.error('Failed to copy to clipboard');
@@ -191,7 +192,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  const isExpiringSoon = peer && peer.expiresAt && (peer.expiresAt.getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000;
+  const isExpiringSoon = peer && peer.expiresAt && (peer.expiresAt.getTime() - Date.now()) < TIME_THRESHOLDS.EXPIRATION_WARNING_MS;
   const isExpired = peer && peer.expiresAt && peer.expiresAt.getTime() < Date.now();
 
   return (

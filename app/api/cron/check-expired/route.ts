@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleCronRequest } from '@/lib/cron/expiration-checker';
+import { jsonResponse } from '@/lib/api-helpers';
 
 /**
  * GET /api/cron/check-expired
@@ -15,7 +16,10 @@ export async function GET(request: NextRequest) {
   const result = await handleCronRequest(token || undefined);
 
   if (!result.success) {
-    return NextResponse.json(result, { status: result.message === 'Unauthorized' ? 401 : 500 });
+    if (result.message === 'Unauthorized') {
+      return jsonResponse.unauthorized(result.message);
+    }
+    return jsonResponse.error(result.message);
   }
 
   return NextResponse.json(result);
@@ -31,7 +35,10 @@ export async function POST(request: NextRequest) {
   const result = await handleCronRequest(token || undefined);
 
   if (!result.success) {
-    return NextResponse.json(result, { status: result.message === 'Unauthorized' ? 401 : 500 });
+    if (result.message === 'Unauthorized') {
+      return jsonResponse.unauthorized(result.message);
+    }
+    return jsonResponse.error(result.message);
   }
 
   return NextResponse.json(result);

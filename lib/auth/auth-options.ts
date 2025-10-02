@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authenticateUser } from './ldap';
+import { config } from '@/lib/config';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -56,7 +57,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: config.auth.sessionMaxAge,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: config.auth.secret,
 };

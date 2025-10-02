@@ -1,22 +1,23 @@
 import { WireGuardConfig } from '@/types';
 import { getGlobalTemplate } from '@/lib/store/template';
+import { config } from '@/lib/config';
 
 /**
  * Build WireGuard configuration file content
  */
-export function buildConfigFile(config: WireGuardConfig): string {
-  const allowedIPsStr = config.allowedIPs.join(', ');
+export function buildConfigFile(wgConfig: WireGuardConfig): string {
+  const allowedIPsStr = wgConfig.allowedIPs.join(', ');
 
   return `[Interface]
-PrivateKey = ${config.privateKey}
-Address = ${config.address}
-DNS = ${config.dns}
+PrivateKey = ${wgConfig.privateKey}
+Address = ${wgConfig.address}
+DNS = ${wgConfig.dns}
 
 [Peer]
-PublicKey = ${config.publicKey}
+PublicKey = ${wgConfig.publicKey}
 AllowedIPs = ${allowedIPsStr}
-Endpoint = ${config.endpoint}
-PersistentKeepalive = ${config.persistentKeepalive}
+Endpoint = ${wgConfig.endpoint}
+PersistentKeepalive = ${wgConfig.persistentKeepalive}
 `;
 }
 
@@ -30,7 +31,7 @@ export function getDefaultTemplate(): Partial<WireGuardConfig> {
     allowedIPs: template.allowedIPs,
     endpoint: template.endpoint,
     persistentKeepalive: template.persistentKeepalive,
-    publicKey: process.env.WG_SERVER_PUBLIC_KEY || '',
+    publicKey: config.wireguard.serverPublicKey || '',
   };
 }
 

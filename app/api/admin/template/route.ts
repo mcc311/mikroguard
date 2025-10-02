@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getGlobalTemplate, updateGlobalTemplate } from '@/lib/store/template';
 import { ApiResponse } from '@/types';
+import { jsonResponse } from '@/lib/api-helpers';
 
 /**
  * GET /api/admin/template
@@ -13,10 +14,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user || !(session.user as any).isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const template = getGlobalTemplate();
@@ -27,10 +25,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Failed to get template:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to get template' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to get template');
   }
 }
 
@@ -43,10 +38,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user || !(session.user as any).isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const body = await request.json();
@@ -65,9 +57,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to update template:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to update template' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to update template');
   }
 }

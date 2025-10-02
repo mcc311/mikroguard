@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { renewPeer, getPeerByUsername, getServerPublicKey } from '@/lib/routeros/wireguard';
-import { buildConfigFile, getDefaultTemplate } from '@/lib/wireguard/config-builder';
+import { renewPeer, getPeerByUsername } from '@/lib/routeros/wireguard';
+import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
+import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
 
 /**
  * POST /api/config/renew
@@ -14,10 +15,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -25,10 +23,7 @@ export async function POST(request: NextRequest) {
     // Check if user has a config
     const existingPeer = await getPeerByUsername(username);
     if (!existingPeer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'No configuration found. Create one first.' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('No configuration found. Create one first.');
     }
 
     // Renew the peer (update TTL and enable if disabled)
@@ -38,18 +33,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
 
     // Build configuration
-    const template = getDefaultTemplate();
-    const serverPublicKey = await getServerPublicKey().catch(() => process.env.WG_SERVER_PUBLIC_KEY || '');
+    const serverPublicKey = await getServerPublicKeyOrFallback();
 
     const config: WireGuardConfig = {
       username,
-      privateKey: 'YOUR_PRIVATE_KEY_HERE', // User should use their existing private key
-      address: existingPeer.allowedAddress,
-      dns: body.dns || template.dns || '1.1.1.1',
-      publicKey: serverPublicKey,
-      allowedIPs: body.allowedIPs || template.allowedIPs || [],
-      endpoint: body.endpoint || template.endpoint || '',
-      persistentKeepalive: body.persistentKeepalive || template.persistentKeepalive || 25,
+      ...buildConfigWithDefaults(body, existingPeer.allowedAddress, serverPublicKey),
     };
 
     const configFile = buildConfigFile(config);
@@ -67,9 +55,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to renew config:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to renew configuration' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to renew configuration');
   }
 }

@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername, deletePeer } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
+import { jsonResponse } from '@/lib/api-helpers';
+import { HTTP_STATUS } from '@/lib/constants';
 
 /**
  * GET /api/config/my
@@ -13,10 +15,7 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (!peer) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'No configuration found' },
-        { status: 200 }
+        { status: HTTP_STATUS.OK }
       );
     }
 
@@ -35,10 +34,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to get config:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to get configuration' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to get configuration');
   }
 }
 
@@ -51,10 +47,7 @@ export async function DELETE(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -62,10 +55,7 @@ export async function DELETE(request: NextRequest) {
     // Check if user has a config
     const peer = await getPeerByUsername(username);
     if (!peer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'No configuration found' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('No configuration found');
     }
 
     // Delete the peer
@@ -77,9 +67,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to delete config:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to delete configuration' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to delete configuration');
   }
 }

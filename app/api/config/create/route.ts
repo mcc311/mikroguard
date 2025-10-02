@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { createPeer, getPeerByUsername, getNextAvailableIP, getServerPublicKey } from '@/lib/routeros/wireguard';
+import { createPeer, getPeerByUsername, getNextAvailableIP } from '@/lib/routeros/wireguard';
 import { generateKeyPair, isValidPublicKey } from '@/lib/wireguard/keygen';
-import { buildConfigFile, getDefaultTemplate } from '@/lib/wireguard/config-builder';
+import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
+import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
 
 /**
  * POST /api/config/create
@@ -15,10 +16,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -26,10 +24,7 @@ export async function POST(request: NextRequest) {
     // Check if user already has a config
     const existingPeer = await getPeerByUsername(username);
     if (existingPeer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Configuration already exists. Use renew instead.' },
-        { status: 400 }
-      );
+      return jsonResponse.badRequest('Configuration already exists. Use renew instead.');
     }
 
     // Parse request body for custom configuration
@@ -49,10 +44,7 @@ export async function POST(request: NextRequest) {
       // For production, you'd need proper Curve25519 implementation
       // For now, we require client to provide their public key
       if (!clientPublicKey) {
-        return NextResponse.json<ApiResponse>(
-          { success: false, error: 'Public key is required' },
-          { status: 400 }
-        );
+        return jsonResponse.badRequest('Public key is required');
       }
       publicKey = clientPublicKey;
     }
@@ -65,18 +57,12 @@ export async function POST(request: NextRequest) {
     await createPeer(username, publicKey, allowedAddress);
 
     // Build configuration
-    const template = getDefaultTemplate();
-    const serverPublicKey = await getServerPublicKey().catch(() => process.env.WG_SERVER_PUBLIC_KEY || '');
+    const serverPublicKey = await getServerPublicKeyOrFallback();
 
     const config: WireGuardConfig = {
       username,
-      privateKey: privateKey || 'YOUR_PRIVATE_KEY_HERE',
-      address,
-      dns: customConfig.dns || template.dns || '1.1.1.1',
-      publicKey: serverPublicKey,
-      allowedIPs: customConfig.allowedIPs || template.allowedIPs || [],
-      endpoint: customConfig.endpoint || template.endpoint || '',
-      persistentKeepalive: customConfig.persistentKeepalive || template.persistentKeepalive || 25,
+      ...buildConfigWithDefaults(customConfig, address, serverPublicKey),
+      privateKey: privateKey || buildConfigWithDefaults(customConfig, address, serverPublicKey).privateKey,
     };
 
     const configFile = buildConfigFile(config);
@@ -90,9 +76,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to create config:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to create configuration' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to create configuration');
   }
 }

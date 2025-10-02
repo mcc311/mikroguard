@@ -20,6 +20,7 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
+  // NOTE: These UI defaults should match the server-side defaults in @/lib/config
   const [config, setConfig] = useState<TemplateConfig>({
     dns: defaultValues?.dns || '1.1.1.1',
     allowedIPs: defaultValues?.allowedIPs || '10.10.10.0/24,10.0.0.0/24',

@@ -165,17 +165,19 @@ export class RouterOSClient {
   }
 }
 
+import { config } from '@/lib/config';
+
 // Singleton instance
 let client: RouterOSClient | null = null;
 
 export async function getRouterOSClient(): Promise<RouterOSClient> {
   if (!client) {
     client = new RouterOSClient({
-      host: process.env.ROUTEROS_HOST!,
-      port: parseInt(process.env.ROUTEROS_PORT || '8080'),
-      username: process.env.ROUTEROS_USERNAME!,
-      password: process.env.ROUTEROS_PASSWORD!,
-      useTls: process.env.ROUTEROS_USE_TLS === 'true',
+      host: config.routeros.host,
+      port: config.routeros.port,
+      username: config.routeros.username,
+      password: config.routeros.password,
+      useTls: config.routeros.useTls,
     });
     await client.connect();
   }

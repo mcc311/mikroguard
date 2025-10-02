@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { getPeerByUsername, updatePeerPublicKey, getServerPublicKey } from '@/lib/routeros/wireguard';
+import { getPeerByUsername, updatePeerPublicKey } from '@/lib/routeros/wireguard';
 import { isValidPublicKey } from '@/lib/wireguard/keygen';
-import { buildConfigFile, getDefaultTemplate } from '@/lib/wireguard/config-builder';
+import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
+import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
 
 /**
  * POST /api/config/update-key
@@ -15,10 +16,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const username = (session.user as any).username;
@@ -26,10 +24,7 @@ export async function POST(request: NextRequest) {
     // Check if user has a config
     const existingPeer = await getPeerByUsername(username);
     if (!existingPeer) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'No configuration found. Please create one first.' },
-        { status: 404 }
-      );
+      return jsonResponse.notFound('No configuration found. Please create one first.');
     }
 
     // Parse request body
@@ -37,28 +32,18 @@ export async function POST(request: NextRequest) {
     const { publicKey } = body;
 
     if (!publicKey || !isValidPublicKey(publicKey)) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Valid public key is required' },
-        { status: 400 }
-      );
+      return jsonResponse.badRequest('Valid public key is required');
     }
 
     // Update public key in RouterOS
     await updatePeerPublicKey(username, publicKey);
 
     // Build new configuration file
-    const template = getDefaultTemplate();
-    const serverPublicKey = await getServerPublicKey().catch(() => process.env.WG_SERVER_PUBLIC_KEY || '');
+    const serverPublicKey = await getServerPublicKeyOrFallback();
 
     const config: WireGuardConfig = {
       username,
-      privateKey: 'YOUR_PRIVATE_KEY_HERE',
-      address: existingPeer.allowedAddress,
-      dns: template.dns || '1.1.1.1',
-      publicKey: serverPublicKey,
-      allowedIPs: template.allowedIPs || [],
-      endpoint: template.endpoint || '',
-      persistentKeepalive: template.persistentKeepalive || 25,
+      ...buildConfigWithDefaults({}, existingPeer.allowedAddress, serverPublicKey),
     };
 
     const configFile = buildConfigFile(config);
@@ -72,9 +57,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to update public key:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to update public key' },
-      { status: 500 }
-    );
+    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to update public key');
   }
 }

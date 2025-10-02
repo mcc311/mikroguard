@@ -9,6 +9,7 @@ import { PeerTable } from '@/components/PeerTable';
 import { WireGuardPeer } from '@/types';
 import { Shield, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { TIME_THRESHOLDS } from '@/lib/constants';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -124,7 +125,7 @@ export default function AdminPage() {
   const expiredPeers = peers.filter(p => p.expiresAt < new Date()).length;
   const expiringSoon = peers.filter(p => {
     const diff = p.expiresAt.getTime() - Date.now();
-    return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
+    return diff > 0 && diff < TIME_THRESHOLDS.EXPIRATION_WARNING_MS;
   }).length;
 
   return (

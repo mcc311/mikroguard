@@ -1,17 +1,18 @@
 import crypto from 'crypto';
+import { WIREGUARD_PROTOCOL } from '@/lib/constants';
 
 /**
  * Generate WireGuard key pair
  * Returns base64-encoded private and public keys
  */
 export function generateKeyPair(): { privateKey: string; publicKey: string } {
-  // Generate 32 random bytes for private key
-  const privateKeyBuffer = crypto.randomBytes(32);
+  // Generate random bytes for private key
+  const privateKeyBuffer = crypto.randomBytes(WIREGUARD_PROTOCOL.KEY_BUFFER_LENGTH);
 
-  // Clamp the private key as per WireGuard spec
-  privateKeyBuffer[0] &= 248;
-  privateKeyBuffer[31] &= 127;
-  privateKeyBuffer[31] |= 64;
+  // Clamp the private key as per WireGuard spec (Curve25519 requirement)
+  privateKeyBuffer[0] &= WIREGUARD_PROTOCOL.CLAMP_MASK_0;
+  privateKeyBuffer[31] &= WIREGUARD_PROTOCOL.CLAMP_MASK_31_AND;
+  privateKeyBuffer[31] |= WIREGUARD_PROTOCOL.CLAMP_MASK_31_OR;
 
   const privateKey = privateKeyBuffer.toString('base64');
 
@@ -30,13 +31,13 @@ export function generateKeyPair(): { privateKey: string; publicKey: string } {
  * Validate WireGuard public key format
  */
 export function isValidPublicKey(key: string): boolean {
-  if (!key || key.length !== 44) {
+  if (!key || key.length !== WIREGUARD_PROTOCOL.PUBLIC_KEY_LENGTH) {
     return false;
   }
 
   try {
     const buffer = Buffer.from(key, 'base64');
-    return buffer.length === 32;
+    return buffer.length === WIREGUARD_PROTOCOL.KEY_BUFFER_LENGTH;
   } catch {
     return false;
   }

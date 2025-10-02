@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Shield, Copy, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { UI_TIMEOUTS } from '@/lib/constants';
 
 export default function NewConfigPage() {
   const { data: session, status } = useSession();
@@ -75,7 +76,7 @@ export default function NewConfigPage() {
     try {
       await navigator.clipboard.writeText(generatedConfig);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
       toast.success('Configuration copied to clipboard!');
     } catch (error) {
       toast.error('Failed to copy to clipboard');

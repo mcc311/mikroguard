@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getDefaultTemplate } from '@/lib/wireguard/config-builder';
 import { ApiResponse } from '@/types';
+import { jsonResponse } from '@/lib/api-helpers';
 
 /**
  * GET /api/config/template
@@ -13,10 +14,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return jsonResponse.unauthorized();
     }
 
     const template = getDefaultTemplate();
@@ -27,9 +25,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Failed to get template:', error);
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: 'Failed to get template' },
-      { status: 500 }
-    );
+    return jsonResponse.error('Failed to get template');
   }
 }

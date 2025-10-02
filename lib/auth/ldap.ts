@@ -1,22 +1,9 @@
 import ldap, { SearchOptions, Client } from 'ldapjs';
 import { User } from '@/types';
-
-interface LDAPConfig {
-  url: string;
-  bindDN: string;
-  bindPassword: string;
-  searchBase: string;
-  adminGroup: string;
-}
+import { config, type LDAPConfig } from '@/lib/config';
 
 function getLDAPConfig(): LDAPConfig {
-  return {
-    url: process.env.LDAP_URL || 'ldap://localhost:389',
-    bindDN: process.env.LDAP_BIND_DN || '',
-    bindPassword: process.env.LDAP_BIND_PASSWORD || '',
-    searchBase: process.env.LDAP_SEARCH_BASE || '',
-    adminGroup: process.env.LDAP_ADMIN_GROUP || '',
-  };
+  return config.ldap;
 }
 
 /**

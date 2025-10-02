@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Copy, Download, Check } from 'lucide-react';
+import { UI_TIMEOUTS } from '@/lib/constants';
 
 interface ConfigDisplayProps {
   config: string;
@@ -17,7 +18,7 @@ export function ConfigDisplay({ config, filename = 'wireguard.conf' }: ConfigDis
   const handleCopy = async () => {
     await navigator.clipboard.writeText(config);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
   };
 
   const handleDownload = () => {

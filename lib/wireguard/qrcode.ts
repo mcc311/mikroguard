@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { config } from '@/lib/config';
 
 /**
  * Generate QR code as Data URL for WireGuard configuration
@@ -6,10 +7,10 @@ import QRCode from 'qrcode';
 export async function generateQRCode(configContent: string): Promise<string> {
   try {
     const dataUrl = await QRCode.toDataURL(configContent, {
-      errorCorrectionLevel: 'L',
+      errorCorrectionLevel: config.qrCode.errorCorrectionLevel,
       type: 'image/png',
-      width: 300,
-      margin: 2,
+      width: config.qrCode.width,
+      margin: config.qrCode.margin,
     });
     return dataUrl;
   } catch (error) {
@@ -24,10 +25,10 @@ export async function generateQRCode(configContent: string): Promise<string> {
 export async function generateQRCodeSVG(configContent: string): Promise<string> {
   try {
     const svg = await QRCode.toString(configContent, {
-      errorCorrectionLevel: 'L',
+      errorCorrectionLevel: config.qrCode.errorCorrectionLevel,
       type: 'svg',
-      width: 300,
-      margin: 2,
+      width: config.qrCode.width,
+      margin: config.qrCode.margin,
     });
     return svg;
   } catch (error) {
