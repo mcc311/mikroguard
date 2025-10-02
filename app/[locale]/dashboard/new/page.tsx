@@ -42,7 +42,7 @@ export default function NewConfigPage() {
         .then(data => {
           if (data.success && data.data) {
             // User already has config, redirect to dashboard
-            toast.error('You already have a configuration. Redirecting to dashboard...');  // Keep as is - edge case message
+            toast.error(t('alreadyHaveConfig'));
             router.push('/dashboard');
           } else {
             // User doesn't have config, allow access
@@ -145,14 +145,14 @@ export default function NewConfigPage() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'border-primary bg-primary text-white' : 'border-muted'}`}>
                 1
               </div>
-              <span className="text-sm font-medium">Submit Public Key</span>
+              <span className="text-sm font-medium">{t('step1Title')}</span>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
             <div className={`flex items-center gap-2 ${step >= 2 ? 'text-primary' : 'text-muted-foreground'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'border-primary bg-primary text-white' : 'border-muted'}`}>
                 2
               </div>
-              <span className="text-sm font-medium">Copy Configuration</span>
+              <span className="text-sm font-medium">{t('step2Title')}</span>
             </div>
           </div>
 
@@ -162,32 +162,32 @@ export default function NewConfigPage() {
               {/* Instructions */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Before You Start</CardTitle>
+                  <CardTitle>{t('beforeYouStart')}</CardTitle>
                   <CardDescription>
-                    Follow these steps to prepare your WireGuard tunnel
+                    {t('beforeYouStartDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-2">1. Create an Empty Tunnel</h4>
+                    <h4 className="font-semibold mb-2">1. {t('step1Instruction')}</h4>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                      <li>Open your WireGuard application</li>
-                      <li>Click &quot;Add Empty Tunnel&quot; or &quot;Create New Tunnel&quot;</li>
-                      <li>WireGuard will generate a key pair for you automatically</li>
-                      <li>Give it a name (e.g., &quot;My VPN&quot;)</li>
+                      <li>{t('step1Detail1')}</li>
+                      <li>{t('step1Detail2')}</li>
+                      <li>{t('step1Detail3')}</li>
+                      <li>{t('step1Detail4')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">2. Find Your Public Key</h4>
+                    <h4 className="font-semibold mb-2">2. {t('step2Instruction')}</h4>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                      <li>In the tunnel you created, find the Interface section</li>
-                      <li>Look for the &quot;Public key&quot; field</li>
-                      <li>Copy the entire key (it looks like: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded text-xs">abc123...xyz=</code>)</li>
+                      <li>{t('step2Detail1')}</li>
+                      <li>{t('step2Detail2')}</li>
+                      <li>{t('step2Detail3')}</li>
                     </ul>
                   </div>
                   <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                     <p className="text-sm">
-                      <strong>Note:</strong> Don&apos;t fill in any other configuration yet. We&apos;ll provide the complete config in the next step.
+                      <strong>{t('noteTitle')}</strong> {t('noteText')}
                     </p>
                   </div>
                 </CardContent>
@@ -218,7 +218,7 @@ export default function NewConfigPage() {
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">
-                        Should be 44 characters and end with &apos;=&apos;
+                        {t('publicKeyHintShort')}
                       </p>
                     )}
                   </div>
@@ -241,34 +241,24 @@ export default function NewConfigPage() {
               {/* Instructions First */}
               <Card>
                 <CardHeader>
-                  <CardTitle>How to Apply Your Configuration</CardTitle>
+                  <CardTitle>{t('howToApply')}</CardTitle>
                   <CardDescription>
-                    Follow these steps carefully to complete your setup
+                    {t('howToApplyDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <ol className="list-decimal list-inside space-y-2 text-sm">
-                      <li className="text-base">
-                        <strong>Copy the configuration below</strong> using the Copy button
-                      </li>
-                      <li className="text-base">
-                        Go back to your WireGuard app and <strong>edit your tunnel</strong>
-                      </li>
-                      <li className="text-base">
-                        <strong>Keep your Private Key</strong> - only replace the content <strong>after</strong> the Private Key line
-                      </li>
-                      <li className="text-base">
-                        Paste the copied configuration, making sure to keep your own Private Key in the [Interface] section
-                      </li>
-                      <li className="text-base">
-                        Save and activate your tunnel to connect
-                      </li>
+                      <li className="text-base">{t('applyStep1')}</li>
+                      <li className="text-base">{t('applyStep2')}</li>
+                      <li className="text-base">{t('applyStep3')}</li>
+                      <li className="text-base">{t('applyStep4')}</li>
+                      <li className="text-base">{t('applyStep5')}</li>
                     </ol>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                     <p className="text-sm">
-                      <strong>Important:</strong> The Private Key in the configuration below is a placeholder. You must keep your own Private Key that was generated by WireGuard.
+                      <strong>{t('importantTitle')}</strong> {t('importantText')}
                     </p>
                   </div>
                 </CardContent>
@@ -277,15 +267,15 @@ export default function NewConfigPage() {
               {/* Configuration Display */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Your WireGuard Configuration</CardTitle>
+                  <CardTitle>{t('configTitle')}</CardTitle>
                   <CardDescription>
-                    Copy this configuration and apply it to your tunnel
+                    {t('configDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-base font-semibold">Configuration</Label>
+                      <Label className="text-base font-semibold">{t('configLabel')}</Label>
                       <Button
                         variant="outline"
                         size="sm"
