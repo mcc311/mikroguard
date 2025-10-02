@@ -258,33 +258,28 @@ export default function AdminPage() {
             </div>
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>{t('actions.title')}</CardTitle>
+                    <CardTitle>{t('peers.title')}</CardTitle>
+                    <CardDescription>{t('peers.description')}</CardDescription>
                   </div>
-                  <Link href="/admin/template">
-                    <Button variant="outline" size="sm">
-                      <Settings className="w-4 h-4 mr-2" />
-                      {t('actions.templateButton')}
+                  <div className="flex items-center gap-2">
+                    <Link href="/admin/template">
+                      <Button variant="outline" size="sm" disabled>
+                        <Settings className="w-4 h-4 mr-2" />
+                        {t('actions.templateButton')}
+                      </Button>
+                    </Link>
+                    <Button disabled variant="outline" size="sm">
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      {t('actions.checkExpired')}
                     </Button>
-                  </Link>
+                    <Button disabled size="sm">
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {t('actions.refresh')}
+                    </Button>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex gap-2">
-                <Button disabled>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  {t('actions.refresh')}
-                </Button>
-                <Button disabled variant="outline">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  {t('actions.checkExpired')}
-                </Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('peers.title')}</CardTitle>
-                <CardDescription>{t('peers.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <PeerTableSkeleton />
@@ -350,39 +345,31 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{t('actions.title')}</CardTitle>
-                  <CardDescription>{t('actions.description')}</CardDescription>
-                </div>
-                <Link href="/admin/template">
-                  <Button variant="outline" size="sm">
-                    <Settings className="w-4 h-4 mr-2" />
-                    {t('actions.templateButton')}
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-              <Button onClick={fetchPeers} disabled={actionLoading}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                {t('actions.refresh')}
-              </Button>
-              <Button onClick={handleCheckExpired} disabled={actionLoading} variant="outline">
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                {t('actions.checkExpired')}
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Peers Table */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('peers.title')}</CardTitle>
-              <CardDescription>{t('peers.description')}</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>{t('peers.title')}</CardTitle>
+                  <CardDescription>{t('peers.description')}</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href="/admin/template">
+                    <Button variant="outline" size="sm" disabled={actionLoading}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      {t('actions.templateButton')}
+                    </Button>
+                  </Link>
+                  <Button onClick={handleCheckExpired} disabled={actionLoading} variant="outline" size="sm">
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    {t('actions.checkExpired')}
+                  </Button>
+                  <Button onClick={fetchPeers} disabled={actionLoading} size="sm">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {t('actions.refresh')}
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <PeerTable
