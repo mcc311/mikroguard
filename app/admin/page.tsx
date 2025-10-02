@@ -32,6 +32,7 @@ import Link from 'next/link';
 import { TIME_THRESHOLDS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { Session } from 'next-auth';
+import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
 
 interface ExtendedSession extends Session {
   user: Session['user'] & {
@@ -54,6 +55,7 @@ export default function AdminPage() {
     currentKey: '',
   });
   const [newPublicKey, setNewPublicKey] = useState('');
+  const [keyError, setKeyError] = useState('');
 
   useEffect(() => {
     if (status === 'authenticated' && (session as ExtendedSession | null)?.user?.isAdmin) {
@@ -194,13 +196,20 @@ export default function AdminPage() {
   };
 
   const handleUpdateKey = async () => {
-    if (!newPublicKey.trim()) {
-      toast.error('Please enter a public key');
+    const validation = validateWireGuardPublicKey(newPublicKey);
+    if (!validation.isValid) {
+      setKeyError(validation.error || 'Invalid public key');
+      return;
+    }
+
+    if (newPublicKey.trim() === editKeyDialog.currentKey) {
+      setKeyError('This key is identical to the current one');
       return;
     }
 
     const username = editKeyDialog.username;
     setEditKeyDialog({ open: false, username: '', currentKey: '' });
+    setKeyError('');
     setActionLoading(true);
 
     try {
@@ -414,12 +423,22 @@ export default function AdminPage() {
                 id="newKey"
                 placeholder="Enter new public key..."
                 value={newPublicKey}
-                onChange={(e) => setNewPublicKey(e.target.value)}
-                className="font-mono text-sm"
+                onChange={(e) => {
+                  setNewPublicKey(e.target.value);
+                  if (keyError) setKeyError('');
+                }}
+                className={`font-mono text-sm ${keyError ? 'border-destructive' : ''}`}
               />
-              <p className="text-xs text-muted-foreground">
-                Should be 44 characters and end with &apos;=&apos;
-              </p>
+              {keyError ? (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {keyError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Should be 44 characters and end with &apos;=&apos;
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -429,7 +448,10 @@ export default function AdminPage() {
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdateKey} disabled={!newPublicKey.trim() || actionLoading}>
+            <Button
+              onClick={handleUpdateKey}
+              disabled={!newPublicKey.trim() || actionLoading}
+            >
               {actionLoading ? 'Updating...' : 'Update Key'}
             </Button>
           </DialogFooter>

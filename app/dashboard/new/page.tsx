@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { UI_TIMEOUTS } from '@/lib/constants';
 import { LoadingPage } from '@/components/loading-skeletons';
 import { Input } from '@/components/ui/input';
+import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
 
 export default function NewConfigPage() {
   const { status } = useSession();
@@ -23,33 +24,6 @@ export default function NewConfigPage() {
   const [copied, setCopied] = useState(false);
   const [keyError, setKeyError] = useState('');
   const [checkingExisting, setCheckingExisting] = useState(true);
-
-  // WireGuard public key is 44 characters base64 string ending with '='
-  const validatePublicKey = (key: string): boolean => {
-    const trimmedKey = key.trim();
-
-    // Check length
-    if (trimmedKey.length !== 44) {
-      setKeyError('Public key must be exactly 44 characters long');
-      return false;
-    }
-
-    // Check if ends with '='
-    if (!trimmedKey.endsWith('=')) {
-      setKeyError('Public key must end with "="');
-      return false;
-    }
-
-    // Check base64 format (alphanumeric + / + + and ends with =)
-    const base64Regex = /^[A-Za-z0-9+/]{43}=$/;
-    if (!base64Regex.test(trimmedKey)) {
-      setKeyError('Public key contains invalid characters');
-      return false;
-    }
-
-    setKeyError('');
-    return true;
-  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -82,13 +56,10 @@ export default function NewConfigPage() {
   const handleSubmitPublicKey = async () => {
     const trimmedKey = publicKey.trim();
 
-    if (!trimmedKey) {
-      setKeyError('Please enter your public key');
-      return;
-    }
-
     // Validate public key format
-    if (!validatePublicKey(trimmedKey)) {
+    const validation = validateWireGuardPublicKey(trimmedKey);
+    if (!validation.isValid) {
+      setKeyError(validation.error || 'Invalid public key');
       return;
     }
 

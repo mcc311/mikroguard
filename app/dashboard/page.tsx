@@ -27,10 +27,11 @@ import {
 import { WireGuardPeer } from '@/types';
 import { DashboardCardSkeleton, ConfigDisplaySkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2 } from 'lucide-react';
+import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { UI_TIMEOUTS, TIME_THRESHOLDS } from '@/lib/constants';
+import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
 
 export default function DashboardPage() {
   const { status } = useSession();
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   const [showKeyDialog, setShowKeyDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newPublicKey, setNewPublicKey] = useState('');
+  const [keyError, setKeyError] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -105,8 +107,9 @@ export default function DashboardPage() {
   };
 
   const handleUpdateKey = async () => {
-    if (!newPublicKey.trim()) {
-      toast.error('Please enter a valid public key');
+    const validation = validateWireGuardPublicKey(newPublicKey);
+    if (!validation.isValid) {
+      setKeyError(validation.error || 'Invalid public key');
       return;
     }
 
@@ -391,12 +394,22 @@ export default function DashboardPage() {
                 id="publicKey"
                 placeholder="Enter your new public key..."
                 value={newPublicKey}
-                onChange={(e) => setNewPublicKey(e.target.value)}
-                className="font-mono text-sm"
+                onChange={(e) => {
+                  setNewPublicKey(e.target.value);
+                  if (keyError) setKeyError('');
+                }}
+                className={`font-mono text-sm ${keyError ? 'border-destructive' : ''}`}
               />
-              <p className="text-xs text-muted-foreground">
-                The public key should be 44 characters long and end with &apos;=&apos;
-              </p>
+              {keyError ? (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {keyError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  The public key should be 44 characters long and end with &apos;=&apos;
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
