@@ -52,8 +52,8 @@ export default function DashboardPage() {
   const fetchConfig = async () => {
     try {
       const [peerRes, configRes] = await Promise.all([
-        fetch('/api/config/my'),
-        fetch('/api/config/download'),
+        fetch('/api/config'),
+        fetch('/api/config/file'),
       ]);
 
       const peerData = await peerRes.json();
@@ -84,8 +84,8 @@ export default function DashboardPage() {
   const handleRenewConfig = async () => {
     setActionLoading(true);
     try {
-      const res = await fetch('/api/config/renew', {
-        method: 'POST',
+      const res = await fetch('/api/config', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -112,8 +112,8 @@ export default function DashboardPage() {
 
     setActionLoading(true);
     try {
-      const res = await fetch('/api/config/update-key', {
-        method: 'POST',
+      const res = await fetch('/api/config', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publicKey: newPublicKey.trim() }),
       });
@@ -151,7 +151,7 @@ export default function DashboardPage() {
     setShowDeleteDialog(false);
     setActionLoading(true);
     try {
-      const res = await fetch('/api/config/my', {
+      const res = await fetch('/api/config', {
         method: 'DELETE',
       });
 

@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth/auth-options';
 import { checkExpiredPeers } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
 import { jsonResponse } from '@/lib/api-helpers';
-import { HTTP_STATUS } from '@/lib/constants';
 
 /**
  * POST /api/admin/check-expired
@@ -16,14 +15,6 @@ export async function POST(_request: NextRequest) {
 
     if (!session?.user) {
       return jsonResponse.unauthorized();
-    }
-
-    const isAdmin = session.user.isAdmin;
-    if (!isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: HTTP_STATUS.FORBIDDEN }
-      );
     }
 
     const expiredPeers = await checkExpiredPeers();

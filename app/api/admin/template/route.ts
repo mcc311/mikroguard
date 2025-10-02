@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || !session.user.isAdmin) {
+    if (!session?.user) {
       return jsonResponse.unauthorized();
     }
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || !session.user.isAdmin) {
+    if (!session?.user) {
       return jsonResponse.unauthorized();
     }
 

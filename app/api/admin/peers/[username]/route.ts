@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
-import { getPeerByUsername, deletePeer, disablePeer, enablePeer, renewPeer } from '@/lib/routeros/wireguard';
+import { getPeerByUsername, deletePeer, disablePeer, enablePeer, renewPeer, updatePeerPublicKey } from '@/lib/routeros/wireguard';
+import { isValidPublicKey } from '@/lib/wireguard/keygen';
 import { ApiResponse } from '@/types';
 import { jsonResponse, getErrorMessage } from '@/lib/api-helpers';
-import { HTTP_STATUS } from '@/lib/constants';
 
 /**
  * GET /api/admin/peers/[username]
@@ -19,14 +19,6 @@ export async function GET(
 
     if (!session?.user) {
       return jsonResponse.unauthorized();
-    }
-
-    const isAdmin = session.user.isAdmin;
-    if (!isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: HTTP_STATUS.FORBIDDEN }
-      );
     }
 
     const { username } = await params;
@@ -61,14 +53,6 @@ export async function DELETE(
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = session.user.isAdmin;
-    if (!isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: HTTP_STATUS.FORBIDDEN }
-      );
-    }
-
     const { username } = await params;
     await deletePeer(username);
 
@@ -84,7 +68,7 @@ export async function DELETE(
 
 /**
  * PATCH /api/admin/peers/[username]
- * Update peer status (enable/disable/renew) (admin only)
+ * Update peer (enable/disable/renew/update-key) (admin only)
  */
 export async function PATCH(
   request: NextRequest,
@@ -97,17 +81,9 @@ export async function PATCH(
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = session.user.isAdmin;
-    if (!isAdmin) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: HTTP_STATUS.FORBIDDEN }
-      );
-    }
-
     const { username } = await params;
     const body = await request.json();
-    const { action } = body;
+    const { action, publicKey } = body;
 
     switch (action) {
       case 'enable':
@@ -118,6 +94,12 @@ export async function PATCH(
         break;
       case 'renew':
         await renewPeer(username);
+        break;
+      case 'update-key':
+        if (!publicKey || !isValidPublicKey(publicKey)) {
+          return jsonResponse.badRequest('Valid public key is required');
+        }
+        await updatePeerPublicKey(username, publicKey);
         break;
       default:
         return jsonResponse.badRequest('Invalid action');

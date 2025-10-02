@@ -10,6 +10,14 @@ import { NextResponse } from 'next/server';
  * 3. Checks admin authorization for /admin/* routes
  * 4. Allows public routes (/, /login, /api/auth/*)
  * 5. Preserves cron token-based auth for /api/cron/*
+ *
+ * SECURITY NOTE:
+ * This project uses middleware as the sole method of route protection.
+ * CVE-2025-29927 (middleware bypass via x-middleware-subrequest header) was fixed
+ * in Next.js 15.2.3. This project requires Next.js >= 15.2.3 to ensure security.
+ *
+ * API routes do NOT perform redundant authorization checks - they trust the
+ * middleware to have already validated authentication and authorization.
  */
 
 export default withAuth(

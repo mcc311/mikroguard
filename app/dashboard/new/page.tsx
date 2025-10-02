@@ -60,7 +60,7 @@ export default function NewConfigPage() {
   useEffect(() => {
     // Check if user already has a config
     if (status === 'authenticated') {
-      fetch('/api/config/my')
+      fetch('/api/config')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data) {
@@ -94,8 +94,9 @@ export default function NewConfigPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/config/create', {
-        method: 'POST',
+      // Create peer
+      const res = await fetch('/api/config', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publicKey: trimmedKey }),
       });
@@ -103,9 +104,16 @@ export default function NewConfigPage() {
       const data = await res.json();
 
       if (data.success) {
-        setGeneratedConfig(data.data.configFile);
-        setStep(2);
-        toast.success('Configuration created successfully!');
+        // Fetch generated config file
+        const configRes = await fetch('/api/config/file');
+        if (configRes.ok) {
+          const configText = await configRes.text();
+          setGeneratedConfig(configText);
+          setStep(2);
+          toast.success('Configuration created successfully!');
+        } else {
+          toast.error('Failed to generate config file');
+        }
       } else {
         toast.error('Failed to create config: ' + data.error);
       }

@@ -204,12 +204,12 @@ export default function AdminPage() {
     setActionLoading(true);
 
     try {
-      const res = await fetch('/api/config/update-key', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/peers/${username}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          newPublicKey: newPublicKey.trim(),
+          action: 'update-key',
+          publicKey: newPublicKey.trim(),
         }),
       });
 
