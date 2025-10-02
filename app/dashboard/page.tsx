@@ -278,7 +278,7 @@ export default function DashboardPage() {
                       </Button>
                     </div>
                     <div className="relative group">
-                      <code className="block font-mono text-xs break-all bg-muted/50 p-3 rounded border">
+                      <code className="block font-mono text-sm break-all bg-muted/50 p-3 rounded border">
                         {peer.publicKey}
                       </code>
                       <Button

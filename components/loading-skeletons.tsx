@@ -4,33 +4,45 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export function DashboardCardSkeleton() {
   return (
-    <Card>
+    <Card className="relative overflow-hidden">
+      {/* Status indicator bar */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted" />
+
       <CardHeader>
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-4 w-64 mt-2" />
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-6 w-20" />
-          </div>
-          <div className="space-y-2">
+      <CardContent className="space-y-6">
+        {/* IP Address and Expiration Grid */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-1">
             <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-6 w-32" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-6 w-6" />
+            </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-6 w-40" />
-          </div>
-          <div className="col-span-2 space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-3 w-36 mt-1" />
           </div>
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-10 w-48" />
+
+        {/* Public Key Section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-7 w-20" />
+          </div>
+          <Skeleton className="h-[52px] w-full" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <Skeleton className="h-11 flex-1" />
+          <Skeleton className="h-11 w-full sm:w-32" />
+          <Skeleton className="h-11 w-full sm:w-11" />
         </div>
       </CardContent>
     </Card>
@@ -43,14 +55,14 @@ export function ConfigDisplaySkeleton() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-80" />
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-72" />
           </div>
-          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-20" />
         </div>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-40 w-full" />
       </CardContent>
     </Card>
   );
