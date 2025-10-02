@@ -306,18 +306,6 @@ export default function DashboardPage() {
                       {t('renewConfiguration')}
                     </Button>
                     <Button
-                      variant="outline"
-                      onClick={() => {
-                        setNewPublicKey(peer.publicKey);
-                        setShowKeyDialog(true);
-                      }}
-                      disabled={actionLoading}
-                      size="lg"
-                    >
-                      <PenLine className="w-4 h-4 mr-2" />
-                      {t('updateKeyButton')}
-                    </Button>
-                    <Button
                       variant="destructive"
                       onClick={() => setShowDeleteDialog(true)}
                       disabled={actionLoading}
