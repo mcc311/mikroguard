@@ -4,7 +4,9 @@ import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername } from '@/lib/routeros/wireguard';
 import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
-import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
+import { jsonResponse } from '@/lib/api-helpers';
+import { getServerPublicKeyOrFallback } from '@/lib/routeros/wireguard';
+import { buildConfigWithDefaults } from '@/lib/wireguard/config-builder';
 
 /**
  * POST /api/config/customize
@@ -18,7 +20,7 @@ export async function POST(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const username = (session.user as any).username;
+    const username = session.user.username!;
 
     // Check if user has a config
     const existingPeer = await getPeerByUsername(username);

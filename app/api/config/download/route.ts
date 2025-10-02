@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername } from '@/lib/routeros/wireguard';
 import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { WireGuardConfig } from '@/types';
-import { getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
+import { getServerPublicKeyOrFallback } from '@/lib/routeros/wireguard';
+import { buildConfigWithDefaults } from '@/lib/wireguard/config-builder';
 import { HTTP_STATUS, FILE_DOWNLOAD } from '@/lib/constants';
 
 /**
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse('Unauthorized', { status: HTTP_STATUS.UNAUTHORIZED });
     }
 
-    const username = (session.user as any).username;
+    const username = session.user.username!;
 
     // Get peer
     const peer = await getPeerByUsername(username);

@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import type { Session } from 'next-auth';
+
+interface ExtendedSession extends Session {
+  user: Session['user'] & {
+    isAdmin?: boolean;
+  };
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,7 +113,7 @@ export default function DashboardPage() {
       } else {
         toast.error('Failed to renew config: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to renew config');
     } finally {
       setActionLoading(false);
@@ -137,7 +144,7 @@ export default function DashboardPage() {
       } else {
         toast.error('Failed to update key: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update key');
     } finally {
       setActionLoading(false);
@@ -151,7 +158,7 @@ export default function DashboardPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
       toast.success('Configuration copied to clipboard!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard');
     }
   };
@@ -173,7 +180,7 @@ export default function DashboardPage() {
       } else {
         toast.error('Failed to delete config: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete config');
     } finally {
       setActionLoading(false);
@@ -208,7 +215,7 @@ export default function DashboardPage() {
             <span className="text-sm text-muted-foreground">
               {session?.user?.name}
             </span>
-            {(session?.user as any)?.isAdmin && (
+            {(session as ExtendedSession | null)?.user?.isAdmin && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">
                   Admin Panel
@@ -286,7 +293,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
-                    You don't have a WireGuard configuration yet
+                    You don&apos;t have a WireGuard configuration yet
                   </p>
                   <Link href="/dashboard/new">
                     <Button>
@@ -359,7 +366,7 @@ export default function DashboardPage() {
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                The public key should be 44 characters long and end with '='
+                The public key should be 44 characters long and end with &apos;=&apos;
               </p>
             </div>
           </div>

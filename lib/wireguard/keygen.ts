@@ -2,11 +2,25 @@ import crypto from 'crypto';
 import { WIREGUARD_PROTOCOL } from '@/lib/constants';
 
 /**
+ * ⚠️ WARNING: INCOMPLETE IMPLEMENTATION ⚠️
+ *
  * Generate WireGuard key pair
- * Returns base64-encoded private and public keys
+ *
+ * This function generates ONLY the private key.
+ * The publicKey field is returned as an EMPTY STRING.
+ *
+ * This is NOT a complete implementation. To derive the public key
+ * from the private key requires Curve25519 scalar multiplication,
+ * which is not implemented here.
+ *
+ * Current usage: Clients must provide their own public key.
+ *
+ * For complete key generation, use one of:
+ * 1. @stablelib/x25519 library
+ * 2. Execute 'wg' CLI tool on server
+ * 3. Let clients generate keys locally
  */
 export function generateKeyPair(): { privateKey: string; publicKey: string } {
-  // Generate random bytes for private key
   const privateKeyBuffer = crypto.randomBytes(WIREGUARD_PROTOCOL.KEY_BUFFER_LENGTH);
 
   // Clamp the private key as per WireGuard spec (Curve25519 requirement)
@@ -16,14 +30,9 @@ export function generateKeyPair(): { privateKey: string; publicKey: string } {
 
   const privateKey = privateKeyBuffer.toString('base64');
 
-  // Generate public key using Curve25519
-  // Note: In production, you should use a proper Curve25519 library
-  // For now, we'll expect the client to provide their public key
-  // or use wg CLI tool on server side
-
   return {
     privateKey,
-    publicKey: '', // Will be computed by client or wg-tools
+    publicKey: '', // NOT IMPLEMENTED - client must provide
   };
 }
 
@@ -42,10 +51,3 @@ export function isValidPublicKey(key: string): boolean {
     return false;
   }
 }
-
-/**
- * Note: For production use, consider using:
- * 1. @stablelib/x25519 for proper Curve25519 key generation
- * 2. Or execute 'wg' CLI tool if available on server
- * 3. Or let clients generate their own keys
- */

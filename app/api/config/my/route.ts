@@ -10,7 +10,7 @@ import { HTTP_STATUS } from '@/lib/constants';
  * GET /api/config/my
  * Get current user's WireGuard configuration
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const username = (session.user as any).username;
+    const username = session.user.username!;
     const peer = await getPeerByUsername(username);
 
     if (!peer) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
  * DELETE /api/config/my
  * Delete current user's WireGuard configuration
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const username = (session.user as any).username;
+    const username = session.user.username!;
 
     // Check if user has a config
     const peer = await getPeerByUsername(username);

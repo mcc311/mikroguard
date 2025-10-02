@@ -10,7 +10,7 @@ import { HTTP_STATUS } from '@/lib/constants';
  * GET /api/admin/peers
  * Get all WireGuard peers (admin only)
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = (session.user as any).isAdmin;
+    const isAdmin = session.user.isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },

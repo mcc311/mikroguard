@@ -65,7 +65,7 @@ export default function NewConfigPage() {
       } else {
         toast.error('Failed to create config: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to create config');
     } finally {
       setLoading(false);
@@ -78,7 +78,7 @@ export default function NewConfigPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
       toast.success('Configuration copied to clipboard!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard');
     }
   };
@@ -167,14 +167,14 @@ export default function NewConfigPage() {
                   <h4 className="font-semibold mb-2">Instructions:</h4>
                   <ol className="list-decimal list-inside space-y-2 text-sm">
                     <li>Open your WireGuard application</li>
-                    <li>Click on "Add Empty Tunnel" or "Create New Tunnel"</li>
+                    <li>Click on &quot;Add Empty Tunnel&quot; or &quot;Create New Tunnel&quot;</li>
                     <li>The app will generate a key pair for you automatically</li>
-                    <li>Give your tunnel a name (e.g., "My VPN")</li>
+                    <li>Give your tunnel a name (e.g., &quot;My VPN&quot;)</li>
                   </ol>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                   <p className="text-sm">
-                    <strong>Note:</strong> Do not fill in any configuration details yet. We'll provide the complete configuration in the next steps.
+                    <strong>Note:</strong> Do not fill in any configuration details yet. We&apos;ll provide the complete configuration in the next steps.
                   </p>
                 </div>
                 <div className="flex justify-end">
@@ -201,7 +201,7 @@ export default function NewConfigPage() {
                   <h4 className="font-semibold mb-2">How to find your public key:</h4>
                   <ol className="list-decimal list-inside space-y-2 text-sm">
                     <li>In WireGuard, select the tunnel you just created</li>
-                    <li>Look for the "Public key" field in the Interface section</li>
+                    <li>Look for the &quot;Public key&quot; field in the Interface section</li>
                     <li>Copy the public key (it looks like: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">abc123...xyz=</code>)</li>
                     <li>Paste it in the field below</li>
                   </ol>
@@ -216,7 +216,7 @@ export default function NewConfigPage() {
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The public key should be 44 characters long and end with '='
+                    The public key should be 44 characters long and end with &apos;=&apos;
                   </p>
                 </div>
                 <div className="flex justify-between">
@@ -245,7 +245,7 @@ export default function NewConfigPage() {
                 <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <h4 className="font-semibold mb-2">Final Steps:</h4>
                   <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>Click the "Copy Configuration" button below</li>
+                    <li>Click the &quot;Copy Configuration&quot; button below</li>
                     <li>Go back to your WireGuard app</li>
                     <li>Edit your tunnel and replace ALL the content with the copied configuration</li>
                     <li>Save the tunnel</li>

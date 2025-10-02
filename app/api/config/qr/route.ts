@@ -5,13 +5,15 @@ import { getPeerByUsername } from '@/lib/routeros/wireguard';
 import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { generateQRCode } from '@/lib/wireguard/qrcode';
 import { WireGuardConfig, ApiResponse } from '@/types';
-import { jsonResponse, getServerPublicKeyOrFallback, buildConfigWithDefaults } from '@/lib/api-helpers';
+import { jsonResponse } from '@/lib/api-helpers';
+import { getServerPublicKeyOrFallback } from '@/lib/routeros/wireguard';
+import { buildConfigWithDefaults } from '@/lib/wireguard/config-builder';
 
 /**
  * GET /api/config/qr
  * Generate QR code for WireGuard configuration
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const username = (session.user as any).username;
+    const username = session.user.username!;
 
     // Get peer
     const peer = await getPeerByUsername(username);

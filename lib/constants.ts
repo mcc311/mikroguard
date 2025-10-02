@@ -52,7 +52,6 @@ export const FILE_DOWNLOAD = {
 
 // UI Text
 export const UI_TEXT = {
-  RENEW_BUTTON_SUFFIX: '(Extend 3 Months)', // This should reference config.wireguard.expirationDays
   PLACEHOLDER_PRIVATE_KEY: 'YOUR_PRIVATE_KEY_HERE',
 } as const;
 

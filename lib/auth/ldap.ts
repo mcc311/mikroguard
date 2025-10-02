@@ -2,6 +2,16 @@ import ldap, { SearchOptions, Client } from 'ldapjs';
 import { User } from '@/types';
 import { config, type LDAPConfig } from '@/lib/config';
 
+interface LDAPAttribute {
+  type: string;
+  values: string[];
+}
+
+interface ExtendedSearchEntry {
+  objectName?: string;
+  attributes: LDAPAttribute[];
+}
+
 function getLDAPConfig(): LDAPConfig {
   return config.ldap;
 }
@@ -37,15 +47,16 @@ export async function authenticateUser(username: string, password: string): Prom
         }
 
         let userDN: string | null = null;
-        let userAttributes: any = {};
+        let userAttributes: Record<string, string | string[] | undefined> = {};
 
         searchRes.on('searchEntry', (entry) => {
           userDN = entry.objectName ? String(entry.objectName) : null;
+          const extEntry = entry as unknown as ExtendedSearchEntry;
           userAttributes = {
-            uid: (entry as any).attributes.find((a: any) => a.type === 'uid')?.values[0],
-            cn: (entry as any).attributes.find((a: any) => a.type === 'cn')?.values[0],
-            mail: (entry as any).attributes.find((a: any) => a.type === 'mail')?.values[0],
-            memberOf: (entry as any).attributes.find((a: any) => a.type === 'memberOf')?.values,
+            uid: extEntry.attributes.find((a) => a.type === 'uid')?.values[0],
+            cn: extEntry.attributes.find((a) => a.type === 'cn')?.values[0],
+            mail: extEntry.attributes.find((a) => a.type === 'mail')?.values[0],
+            memberOf: extEntry.attributes.find((a) => a.type === 'memberOf')?.values,
           };
         });
 
@@ -77,9 +88,9 @@ export async function authenticateUser(username: string, password: string): Prom
             const isAdmin = checkIfAdmin(userAttributes.memberOf, config.adminGroup);
 
             const user: User = {
-              username: Array.isArray(userAttributes.uid) ? userAttributes.uid[0] : userAttributes.uid,
-              displayName: Array.isArray(userAttributes.cn) ? userAttributes.cn[0] : userAttributes.cn,
-              email: Array.isArray(userAttributes.mail) ? userAttributes.mail[0] : userAttributes.mail,
+              username: (Array.isArray(userAttributes.uid) ? userAttributes.uid[0] : userAttributes.uid) || '',
+              displayName: (Array.isArray(userAttributes.cn) ? userAttributes.cn[0] : userAttributes.cn) || '',
+              email: (Array.isArray(userAttributes.mail) ? userAttributes.mail[0] : userAttributes.mail) || '',
               isAdmin,
             };
 

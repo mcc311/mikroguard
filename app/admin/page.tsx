@@ -10,6 +10,13 @@ import { WireGuardPeer } from '@/types';
 import { Shield, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { TIME_THRESHOLDS } from '@/lib/constants';
+import type { Session } from 'next-auth';
+
+interface ExtendedSession extends Session {
+  user: Session['user'] & {
+    isAdmin?: boolean;
+  };
+}
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -21,13 +28,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-    } else if (status === 'authenticated' && !(session?.user as any)?.isAdmin) {
+    } else if (status === 'authenticated' && !(session as ExtendedSession | null)?.user?.isAdmin) {
       router.push('/dashboard');
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (status === 'authenticated' && (session?.user as any)?.isAdmin) {
+    if (status === 'authenticated' && (session as ExtendedSession | null)?.user?.isAdmin) {
       fetchPeers();
     }
   }, [status, session]);
@@ -40,15 +47,15 @@ export default function AdminPage() {
 
       if (data.success) {
         // Convert date strings to Date objects
-        const peersWithDates = data.data.map((peer: any) => ({
+        const peersWithDates = data.data.map((peer: WireGuardPeer & { createdAt: string; expiresAt: string }) => ({
           ...peer,
           createdAt: new Date(peer.createdAt),
           expiresAt: new Date(peer.expiresAt),
         }));
         setPeers(peersWithDates);
       }
-    } catch (error) {
-      console.error('Failed to fetch peers:', error);
+    } catch {
+      console.error('Failed to fetch peers');
     } finally {
       setLoading(false);
     }
@@ -67,7 +74,7 @@ export default function AdminPage() {
         alert(`Disabled ${data.data.expiredCount} expired peers`);
         await fetchPeers();
       }
-    } catch (error) {
+    } catch {
       alert('Failed to check expired peers');
     } finally {
       setActionLoading(false);
@@ -102,7 +109,7 @@ export default function AdminPage() {
       } else {
         alert(`Failed to ${action}: ` + data.error);
       }
-    } catch (error) {
+    } catch {
       alert(`Failed to ${action} peer`);
     } finally {
       setActionLoading(false);
@@ -117,7 +124,7 @@ export default function AdminPage() {
     );
   }
 
-  if (status === 'unauthenticated' || !(session?.user as any)?.isAdmin) {
+  if (status === 'unauthenticated' || !(session as ExtendedSession | null)?.user?.isAdmin) {
     return null;
   }
 

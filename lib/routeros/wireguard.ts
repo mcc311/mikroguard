@@ -6,13 +6,48 @@ import { config } from '@/lib/config';
 const WG_INTERFACE = config.wireguard.interfaceName;
 const EXPIRATION_DAYS = config.wireguard.expirationDays;
 
+// RouterOS raw peer data structure
+interface RouterOSPeer {
+  '.id': string;
+  name: string;
+  interface: string;
+  'public-key': string;
+  'allowed-address': string;
+  comment?: string;
+  disabled?: string;
+  [key: string]: unknown;
+}
+
+// RouterOS WireGuard interface data
+interface RouterOSWGInterface {
+  '.id': string;
+  name: string;
+  'public-key': string;
+  [key: string]: unknown;
+}
+
+/**
+ * Find raw peer data by username (internal helper)
+ */
+async function findPeerRawByUsername(username: string): Promise<RouterOSPeer> {
+  const client = await getRouterOSClient();
+  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
+
+  if (!peer) {
+    throw new Error('Peer not found');
+  }
+
+  return peer;
+}
+
 /**
  * Get all WireGuard peers from RouterOS
  */
 export async function getAllPeers(): Promise<WireGuardPeer[]> {
   const client = await getRouterOSClient();
 
-  const peers = await client.get('/interface/wireguard/peers');
+  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
 
   if (!peers || peers.length === 0) {
     return [];
@@ -27,7 +62,7 @@ export async function getAllPeers(): Promise<WireGuardPeer[]> {
         publicKey: item['public-key'] || '',
         allowedAddress: item['allowed-address'] || '',
         comment: item.comment || '',
-        disabled: item.disabled === 'true' || item.disabled === true,
+        disabled: item.disabled === 'true' || item.disabled === 'yes',
         createdAt: new Date(), // RouterOS doesn't track creation time
         expiresAt: ttl ? fromUnixTime(ttl) : addDays(new Date(), EXPIRATION_DAYS),
       };
@@ -69,17 +104,10 @@ export async function createPeer(
  */
 export async function renewPeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
+  const peer = await findPeerRawByUsername(username);
 
   const expiresAt = addDays(new Date(), EXPIRATION_DAYS);
   const ttlComment = `ttl-${getUnixTime(expiresAt)}`;
-
-  // Find peer ID
-  const peers = await client.get('/interface/wireguard/peers');
-  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
-
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
 
   await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
     comment: ttlComment,
@@ -92,13 +120,7 @@ export async function renewPeer(username: string): Promise<void> {
  */
 export async function disablePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
-
-  const peers = await client.get('/interface/wireguard/peers');
-  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
-
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
+  const peer = await findPeerRawByUsername(username);
 
   await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
     disabled: 'yes',
@@ -110,13 +132,7 @@ export async function disablePeer(username: string): Promise<void> {
  */
 export async function enablePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
-
-  const peers = await client.get('/interface/wireguard/peers');
-  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
-
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
+  const peer = await findPeerRawByUsername(username);
 
   await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
     disabled: 'no',
@@ -128,13 +144,7 @@ export async function enablePeer(username: string): Promise<void> {
  */
 export async function updatePeerPublicKey(username: string, publicKey: string): Promise<void> {
   const client = await getRouterOSClient();
-
-  const peers = await client.get('/interface/wireguard/peers');
-  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
-
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
+  const peer = await findPeerRawByUsername(username);
 
   await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
     'public-key': publicKey,
@@ -146,15 +156,18 @@ export async function updatePeerPublicKey(username: string, publicKey: string): 
  */
 export async function deletePeer(username: string): Promise<void> {
   const client = await getRouterOSClient();
-
-  const peers = await client.get('/interface/wireguard/peers');
-  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
-
-  if (!peer) {
-    throw new Error('Peer not found');
-  }
+  const peer = await findPeerRawByUsername(username);
 
   await client.delete(`/interface/wireguard/peers/${peer['.id']}`);
+}
+
+/**
+ * Get raw peer data without parsing (for performance-critical operations)
+ */
+async function getRawPeers(): Promise<RouterOSPeer[]> {
+  const client = await getRouterOSClient();
+  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
+  return peers.filter((item) => item.interface === WG_INTERFACE);
 }
 
 /**
@@ -162,12 +175,13 @@ export async function deletePeer(username: string): Promise<void> {
  */
 export async function getNextAvailableIP(): Promise<string> {
   const subnet = config.wireguard.subnet;
-  const [network, cidr] = subnet.split('/');
-  const [a, b, c, d] = network.split('.').map(Number);
+  const [network] = subnet.split('/');
+  const [a, b, c] = network.split('.').map(Number);
 
-  const peers = await getAllPeers();
+  // Use raw peers to avoid unnecessary parsing
+  const rawPeers = await getRawPeers();
   const usedIPs = new Set(
-    peers.map((peer) => peer.allowedAddress.split('/')[0])
+    rawPeers.map((peer) => peer['allowed-address'].split('/')[0])
   );
 
   const { startIP, endIP, cidrSuffix } = config.wireguard.ipAllocation;
@@ -219,7 +233,7 @@ function parseTTLFromComment(comment: string): number | null {
 export async function getServerPublicKey(): Promise<string> {
   const client = await getRouterOSClient();
 
-  const interfaces = await client.get('/interface/wireguard');
+  const interfaces = (await client.get('/interface/wireguard')) as RouterOSWGInterface[];
   const wgInterface = interfaces.find((i) => i.name === WG_INTERFACE);
 
   if (!wgInterface) {
@@ -227,4 +241,19 @@ export async function getServerPublicKey(): Promise<string> {
   }
 
   return wgInterface['public-key'];
+}
+
+/**
+ * Get server public key with fallback to config
+ */
+export async function getServerPublicKeyOrFallback(): Promise<string> {
+  try {
+    return await getServerPublicKey();
+  } catch {
+    // Fallback to configured value if RouterOS call fails
+    if (config.wireguard.serverPublicKey) {
+      return config.wireguard.serverPublicKey;
+    }
+    throw new Error('Server public key not available');
+  }
 }

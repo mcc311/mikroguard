@@ -6,13 +6,6 @@ interface RouterOSOptions {
   useTls?: boolean;
 }
 
-interface RouterOSResponse {
-  done?: boolean;
-  data?: Record<string, string>[];
-  error?: string;
-  trap?: string;
-}
-
 /**
  * RouterOS REST API Client
  * Implements communication via RouterOS REST API
@@ -34,11 +27,9 @@ export class RouterOSClient {
   }
 
   /**
-   * Connect to RouterOS device (not needed for REST API)
+   * Verify connection to RouterOS by making a simple API call
    */
-  async connect(): Promise<void> {
-    // REST API doesn't require persistent connection
-    // Just verify credentials work
+  async verifyConnection(): Promise<void> {
     try {
       await this.get('/system/resource');
     } catch (error) {
@@ -47,16 +38,9 @@ export class RouterOSClient {
   }
 
   /**
-   * Disconnect from RouterOS (not needed for REST API)
-   */
-  disconnect(): void {
-    // No persistent connection to close
-  }
-
-  /**
    * Make a GET request
    */
-  async get(path: string): Promise<any[]> {
+  async get(path: string): Promise<unknown[]> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'GET',
@@ -75,7 +59,7 @@ export class RouterOSClient {
   /**
    * Make a PUT request (add new item)
    */
-  async put(path: string, data: Record<string, any>): Promise<any> {
+  async put(path: string, data: Record<string, unknown>): Promise<unknown> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'PUT',
@@ -97,7 +81,7 @@ export class RouterOSClient {
   /**
    * Make a POST request (for commands)
    */
-  async post(path: string, data?: Record<string, any>): Promise<any> {
+  async post(path: string, data?: Record<string, unknown>): Promise<unknown> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'POST',
@@ -119,7 +103,7 @@ export class RouterOSClient {
   /**
    * Make a PATCH request
    */
-  async patch(path: string, data: Record<string, any>): Promise<any> {
+  async patch(path: string, data: Record<string, unknown>): Promise<unknown> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'PATCH',
@@ -156,13 +140,6 @@ export class RouterOSClient {
     }
   }
 
-  /**
-   * Send a command to RouterOS (legacy compatibility)
-   */
-  async sendCommand(words: string[]): Promise<RouterOSResponse> {
-    // This method is kept for compatibility but REST API works differently
-    throw new Error('sendCommand is not supported with REST API. Use get/post/patch/delete methods instead.');
-  }
 }
 
 import { config } from '@/lib/config';
@@ -179,14 +156,7 @@ export async function getRouterOSClient(): Promise<RouterOSClient> {
       password: config.routeros.password,
       useTls: config.routeros.useTls,
     });
-    await client.connect();
+    await client.verifyConnection();
   }
   return client;
-}
-
-export function disconnectRouterOS(): void {
-  if (client) {
-    client.disconnect();
-    client = null;
-  }
 }

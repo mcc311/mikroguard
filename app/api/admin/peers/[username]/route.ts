@@ -21,7 +21,7 @@ export async function GET(
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = (session.user as any).isAdmin;
+    const isAdmin = session.user.isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
@@ -61,7 +61,7 @@ export async function DELETE(
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = (session.user as any).isAdmin;
+    const isAdmin = session.user.isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },
@@ -97,7 +97,7 @@ export async function PATCH(
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = (session.user as any).isAdmin;
+    const isAdmin = session.user.isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },

@@ -1,6 +1,7 @@
 import { WireGuardConfig } from '@/types';
 import { getGlobalTemplate } from '@/lib/store/template';
 import { config } from '@/lib/config';
+import { UI_TEXT } from '@/lib/constants';
 
 /**
  * Build WireGuard configuration file content
@@ -36,30 +37,31 @@ export function getDefaultTemplate(): Partial<WireGuardConfig> {
 }
 
 /**
- * Validate configuration
+ * Build config with defaults and custom values
  */
-export function validateConfig(config: Partial<WireGuardConfig>): string[] {
-  const errors: string[] = [];
+export function buildConfigWithDefaults(
+  customConfig: {
+    dns?: string;
+    allowedIPs?: string;
+    endpoint?: string;
+    persistentKeepalive?: number;
+  },
+  address: string,
+  serverPublicKey: string
+) {
+  const template = getGlobalTemplate();
 
-  if (!config.privateKey) {
-    errors.push('Private key is required');
-  }
-
-  if (!config.address) {
-    errors.push('Address is required');
-  }
-
-  if (!config.publicKey) {
-    errors.push('Server public key is required');
-  }
-
-  if (!config.endpoint) {
-    errors.push('Endpoint is required');
-  }
-
-  if (!config.allowedIPs || config.allowedIPs.length === 0) {
-    errors.push('At least one allowed IP is required');
-  }
-
-  return errors;
+  return {
+    privateKey: UI_TEXT.PLACEHOLDER_PRIVATE_KEY,
+    address,
+    dns: customConfig.dns || template.dns,
+    allowedIPs: customConfig.allowedIPs
+      ? customConfig.allowedIPs.split(',').map(ip => ip.trim())
+      : template.allowedIPs,
+    endpoint: customConfig.endpoint || template.endpoint,
+    persistentKeepalive: customConfig.persistentKeepalive !== undefined
+      ? customConfig.persistentKeepalive
+      : template.persistentKeepalive,
+    publicKey: serverPublicKey,
+  };
 }

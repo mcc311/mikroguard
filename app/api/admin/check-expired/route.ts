@@ -10,7 +10,7 @@ import { HTTP_STATUS } from '@/lib/constants';
  * POST /api/admin/check-expired
  * Check and disable expired peers (admin only)
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return jsonResponse.unauthorized();
     }
 
-    const isAdmin = (session.user as any).isAdmin;
+    const isAdmin = session.user.isAdmin;
     if (!isAdmin) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Forbidden: Admin access required' },

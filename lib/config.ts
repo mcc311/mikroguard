@@ -32,7 +32,7 @@ const configSchema = z.object({
       startIP: z.number().int().min(2).max(254).default(2),
       endIP: z.number().int().min(2).max(254).default(254),
       cidrSuffix: z.string().default('/32'),
-    }).default({}),
+    }).default({ startIP: 2, endIP: 254, cidrSuffix: '/32' }),
   }),
 
   // RouterOS Configuration
@@ -60,7 +60,7 @@ const configSchema = z.object({
     errorCorrectionLevel: z.enum(['L', 'M', 'Q', 'H']).default('L'),
     width: z.number().int().min(100).max(1000).default(300),
     margin: z.number().int().min(0).max(10).default(2),
-  }).default({}),
+  }).default({ errorCorrectionLevel: 'L', width: 300, margin: 2 }),
 });
 
 // Parse and validate environment variables
@@ -135,7 +135,7 @@ function loadConfig() {
     if (error instanceof z.ZodError) {
       console.error('❌ Configuration validation failed:');
       console.error('');
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const path = err.path.join('.');
         console.error(`  • ${path}: ${err.message}`);
       });

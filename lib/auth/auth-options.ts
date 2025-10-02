@@ -1,7 +1,31 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authenticateUser } from './ldap';
 import { config } from '@/lib/config';
+
+// Extend NextAuth types
+interface ExtendedUser extends NextAuthUser {
+  isAdmin?: boolean;
+}
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      username?: string;
+      isAdmin?: boolean;
+    };
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    username?: string;
+    isAdmin?: boolean;
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -40,14 +64,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.username = user.id;
-        token.isAdmin = (user as any).isAdmin || false;
+        token.isAdmin = (user as ExtendedUser).isAdmin || false;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).username = token.username;
-        (session.user as any).isAdmin = token.isAdmin;
+        session.user.username = token.username;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     },

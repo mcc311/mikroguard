@@ -11,6 +11,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Shield, ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import type { Session } from 'next-auth';
+
+interface ExtendedSession extends Session {
+  user: Session['user'] & {
+    isAdmin?: boolean;
+  };
+}
 
 interface TemplateConfig {
   dns: string;
@@ -39,7 +46,7 @@ export default function TemplateConfigPage() {
 
   useEffect(() => {
     // Check admin access
-    if (status === 'authenticated' && !(session?.user as any)?.isAdmin) {
+    if (status === 'authenticated' && !(session as ExtendedSession | null)?.user?.isAdmin) {
       router.push('/dashboard');
     }
   }, [status, session, router]);
@@ -86,7 +93,7 @@ export default function TemplateConfigPage() {
       } else {
         toast.error('Failed to save template: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to save template');
     } finally {
       setLoading(false);
@@ -101,7 +108,7 @@ export default function TemplateConfigPage() {
     );
   }
 
-  if (status === 'unauthenticated' || !(session?.user as any)?.isAdmin) {
+  if (status === 'unauthenticated' || !(session as ExtendedSession | null)?.user?.isAdmin) {
     return null;
   }
 
