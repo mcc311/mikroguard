@@ -54,13 +54,6 @@ const configSchema = z.object({
   cron: z.object({
     secret: z.string().min(16, 'CRON_SECRET must be at least 16 characters'),
   }),
-
-  // QR Code Configuration
-  qrCode: z.object({
-    errorCorrectionLevel: z.enum(['L', 'M', 'Q', 'H']).default('L'),
-    width: z.number().int().min(100).max(1000).default(300),
-    margin: z.number().int().min(0).max(10).default(2),
-  }).default({ errorCorrectionLevel: 'L', width: 300, margin: 2 }),
 });
 
 // Parse and validate environment variables
@@ -119,15 +112,6 @@ function loadConfig() {
       cron: {
         secret: process.env.CRON_SECRET,
       },
-      qrCode: {
-        errorCorrectionLevel: process.env.QR_ERROR_CORRECTION as 'L' | 'M' | 'Q' | 'H' | undefined,
-        width: process.env.QR_WIDTH
-          ? parseInt(process.env.QR_WIDTH, 10)
-          : undefined,
-        margin: process.env.QR_MARGIN
-          ? parseInt(process.env.QR_MARGIN, 10)
-          : undefined,
-      },
     };
 
     return configSchema.parse(rawConfig);
@@ -158,4 +142,3 @@ export type WireGuardConfig = Config['wireguard'];
 export type RouterOSConfig = Config['routeros'];
 export type AuthConfig = Config['auth'];
 export type CronConfig = Config['cron'];
-export type QRCodeConfig = Config['qrCode'];

@@ -157,7 +157,6 @@ npm start
 - `POST /api/config/create` - Create new configuration
 - `POST /api/config/renew` - Renew existing configuration
 - `GET /api/config/download` - Download configuration file
-- `GET /api/config/qr` - Get QR code for configuration
 
 ### Admin Endpoints (Requires Admin Role)
 
@@ -218,7 +217,6 @@ GET https://your-domain.com/api/cron/check-expired?token=YOUR_CRON_SECRET
 ├── components/                 # React components
 │   ├── ui/                    # shadcn/ui components
 │   ├── ConfigDisplay.tsx      # Config viewer
-│   ├── QRCodeDisplay.tsx      # QR code generator
 │   ├── PeerTable.tsx          # Admin peer table
 │   ├── TemplateEditor.tsx     # Config customization
 │   └── Providers.tsx          # Context providers
@@ -231,8 +229,7 @@ GET https://your-domain.com/api/cron/check-expired?token=YOUR_CRON_SECRET
 │   │   └── wireguard.ts      # WireGuard operations
 │   ├── wireguard/             # WireGuard utilities
 │   │   ├── keygen.ts         # Key generation
-│   │   ├── config-builder.ts # Config file builder
-│   │   └── qrcode.ts         # QR code generation
+│   │   └── config-builder.ts # Config file builder
 │   └── cron/                  # Scheduled tasks
 │       └── expiration-checker.ts
 ├── types/                      # TypeScript definitions
