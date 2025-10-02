@@ -145,7 +145,7 @@ While the infrastructure is complete and functional, these pages still contain h
 ### Pages to Update
 1. **`app/[locale]/login/page.tsx`**
    - Add `const t = useTranslations('login');`
-   - Replace strings: "WireGuard Manager", "Sign in with your LDAP credentials", etc.
+   - Replace strings: "MikroGuard", "Sign in with your LDAP credentials", etc.
 
 2. **`app/[locale]/dashboard/page.tsx`**
    - Add `const t = useTranslations('dashboard');`

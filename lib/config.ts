@@ -9,7 +9,7 @@ import { z } from 'zod';
 const configSchema = z.object({
   // Application Configuration
   app: z.object({
-    name: z.string().default('WireGuard Manager'),
+    name: z.string().default('MikroGuard'),
   }),
 
   // LDAP Configuration

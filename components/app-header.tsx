@@ -26,7 +26,7 @@ export function AppHeader({ userName, isAdmin, locale }: AppHeaderProps) {
   const pathname = usePathname();
   const t = useTranslations('common');
   const tNav = useTranslations('navigation');
-  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'WireGuard Manager';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'MikroGuard';
 
   // Check if current page is an admin page
   const isAdminPage = pathname.startsWith('/admin');

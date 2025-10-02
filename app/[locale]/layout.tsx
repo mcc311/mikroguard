@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_APP_NAME || "WireGuard Manager",
+  title: process.env.NEXT_PUBLIC_APP_NAME || "MikroGuard",
   description: "Manage WireGuard VPN configurations with RouterOS",
 };
 

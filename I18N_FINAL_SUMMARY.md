@@ -22,7 +22,7 @@ Full internationalization support for **English, Traditional Chinese (繁體中�
 ### 3. **Application Name**
 - Kept consistent across all languages (not translated)
 - Configurable via `NEXT_PUBLIC_APP_NAME` environment variable
-- Defaults to "WireGuard Manager"
+- Defaults to "MikroGuard"
 
 ### 4. **URL Structure**
 All routes include locale prefix:
@@ -63,7 +63,7 @@ middleware.ts     # Combined i18n + auth middleware
 ### Environment Configuration
 ```bash
 # .env.local (optional)
-NEXT_PUBLIC_APP_NAME=WireGuard Manager
+NEXT_PUBLIC_APP_NAME=MikroGuard
 ```
 
 **Important:** Must use `NEXT_PUBLIC_` prefix because the app name is accessed in client components.
@@ -185,9 +185,9 @@ All future visits use Japanese
 
 ### Test 5: App Name Consistency
 1. Switch between languages
-2. **Verify:** "WireGuard Manager" stays the same (not translated)
+2. **Verify:** "MikroGuard" stays the same (not translated)
 3. Check page title in browser tab
-4. **Verify:** Also shows "WireGuard Manager" consistently
+4. **Verify:** Also shows "MikroGuard" consistently
 
 ---
 
@@ -220,7 +220,7 @@ Route (app)                       Size    First Load JS
 
 ### Issue: App name not showing
 **Cause:** `NEXT_PUBLIC_APP_NAME` not set or not prefixed correctly
-**Solution:** Check `.env.local` has `NEXT_PUBLIC_APP_NAME=WireGuard Manager`
+**Solution:** Check `.env.local` has `NEXT_PUBLIC_APP_NAME=MikroGuard`
 
 ### Issue: Page shows translation keys instead of text
 **Cause:** Translation key doesn't exist or namespace is wrong

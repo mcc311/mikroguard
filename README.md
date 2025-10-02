@@ -1,6 +1,6 @@
-# WireGuard Manager for RouterOS
+# MikroGuard
 
-A modern Next.js application for managing WireGuard VPN configurations on RouterOS devices with LDAP authentication.
+A modern Next.js application for managing WireGuard VPN configurations on MikroTik RouterOS devices with LDAP authentication.
 
 ## Features
 
@@ -35,7 +35,7 @@ A modern Next.js application for managing WireGuard VPN configurations on Router
 
 ```bash
 git clone <your-repo-url>
-cd wg-manager
+cd mikroguard
 npm install
 ```
 

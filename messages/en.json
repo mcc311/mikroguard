@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "WireGuard Manager",
+    "appName": "MikroGuard",
     "loading": "Loading...",
     "refresh": "Refresh",
     "cancel": "Cancel",
@@ -23,7 +23,7 @@
     "newConfiguration": "New Configuration"
   },
   "login": {
-    "title": "WireGuard Manager",
+    "title": "MikroGuard",
     "description": "Sign in with your LDAP credentials to manage VPN configurations",
     "username": "Username",
     "usernamePlaceholder": "Enter your username",
