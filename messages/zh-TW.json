@@ -39,10 +39,10 @@
     "ipAddress": "IP 位址",
     "expires": "到期時間",
     "created": "建立時間",
-    "publicKey": "公開金鑰",
+    "publicKey": "公鑰",
     "updateKey": "更新",
-    "renewConfiguration": "更新設定",
-    "updateKeyButton": "更新金鑰",
+    "renewConfiguration": "續期設定",
+    "updateKeyButton": "更新公鑰",
     "deleteButton": "刪除",
     "noPeer": {
       "title": "尚無 VPN 設定",
@@ -54,11 +54,11 @@
       "description": "將此內容複製到您的 WireGuard 客戶端"
     },
     "updateKeyDialog": {
-      "title": "更新公開金鑰",
-      "description": "輸入您的新 WireGuard 公開金鑰。當您更換裝置或重新產生金鑰時會用到。",
-      "label": "公開金鑰",
-      "placeholder": "請輸入您的新公開金鑰...",
-      "hint": "公開金鑰應為 44 個字元且以 '=' 結尾",
+      "title": "更新公鑰",
+      "description": "輸入您的新 WireGuard 公鑰。當您更換裝置或重新產生金鑰時會用到。",
+      "label": "公鑰",
+      "placeholder": "請輸入您的新公鑰...",
+      "hint": "公鑰應為 44 個字元且以 '=' 結尾",
       "updating": "更新中..."
     },
     "deleteDialog": {
@@ -69,8 +69,8 @@
   "dashboardNew": {
     "title": "建立 VPN 設定",
     "description": "產生新的 WireGuard 設定",
-    "publicKeyLabel": "公開金鑰",
-    "publicKeyPlaceholder": "請輸入您的 WireGuard 公開金鑰",
+    "publicKeyLabel": "公鑰",
+    "publicKeyPlaceholder": "請輸入您的 WireGuard 公鑰",
     "publicKeyHint": "使用以下指令產生：",
     "publicKeyCommand": "wg genkey | wg pubkey",
     "creating": "建立中...",
@@ -96,14 +96,14 @@
       "description": "管理所有 WireGuard 節點設定"
     },
     "updateKeyDialog": {
-      "title": "更新公開金鑰",
-      "description": "更新使用者的 WireGuard 公開金鑰",
-      "currentKey": "目前的公開金鑰",
-      "newKey": "新的公開金鑰",
-      "newKeyPlaceholder": "請輸入新的公開金鑰...",
+      "title": "更新公鑰",
+      "description": "更新使用者的 WireGuard 公鑰",
+      "currentKey": "目前的公鑰",
+      "newKey": "新的公鑰",
+      "newKeyPlaceholder": "請輸入新的公鑰...",
       "hint": "應為 44 個字元且以 '=' 結尾",
       "updating": "更新中...",
-      "updateButton": "更新金鑰"
+      "updateButton": "更新公鑰"
     },
     "deleteDialog": {
       "title": "刪除設定？",
@@ -118,7 +118,7 @@
     "status": "狀態",
     "expires": "到期時間",
     "created": "建立時間",
-    "publicKey": "公開金鑰",
+    "publicKey": "公鑰",
     "actions": "操作",
     "active": "使用中",
     "disabled": "已停用",
@@ -126,8 +126,8 @@
     "expiringSoon": "即將到期",
     "enable": "啟用",
     "disable": "停用",
-    "renew": "更新",
-    "updateKey": "更新金鑰",
+    "renew": "續期",
+    "updateKey": "更新公鑰",
     "noPeers": "找不到節點"
   },
   "template": {
@@ -146,24 +146,24 @@
     "backButton": "返回管理面板"
   },
   "toast": {
-    "configRenewed": "設定已成功更新！",
+    "configRenewed": "設定已成功續期！",
     "configDeleted": "設定已成功刪除",
     "configCreated": "設定已成功建立！",
-    "keyUpdated": "公開金鑰已成功更新！",
+    "keyUpdated": "公鑰已成功更新！",
     "ipCopied": "IP 位址已複製！",
-    "publicKeyCopied": "公開金鑰已複製！",
+    "publicKeyCopied": "公鑰已複製！",
     "configCopied": "設定已複製到剪貼簿！",
     "templateSaved": "範本設定已成功儲存！",
     "peerEnabled": "節點已成功啟用",
     "peerDisabled": "節點已成功停用",
-    "peerRenewed": "節點已成功更新",
+    "peerRenewed": "節點已成功續期",
     "peerDeleted": "節點已成功刪除",
     "expiredDisabled": "已停用 {count} 個已到期的節點",
     "expiredDescription": "所有已到期的 VPN 設定已自動停用",
-    "failedToRenew": "更新設定失敗",
+    "failedToRenew": "續期設定失敗",
     "failedToDelete": "刪除設定失敗",
     "failedToCreate": "建立設定失敗",
-    "failedToUpdateKey": "更新金鑰失敗",
+    "failedToUpdateKey": "更新公鑰失敗",
     "failedToCopy": "複製到剪貼簿失敗",
     "failedToSave": "儲存範本失敗",
     "failedToCheckExpired": "檢查已到期節點失敗",
@@ -171,12 +171,12 @@
     "tryAgainLater": "請稍後再試"
   },
   "validation": {
-    "publicKeyRequired": "必須提供公開金鑰",
-    "publicKeyLength": "公開金鑰必須正好為 44 個字元",
-    "publicKeyEnding": "公開金鑰必須以 \"=\" 結尾",
-    "publicKeyInvalid": "公開金鑰包含無效字元",
-    "publicKeyIdentical": "此金鑰與目前的金鑰相同",
-    "invalidPublicKey": "無效的公開金鑰"
+    "publicKeyRequired": "必須提供公鑰",
+    "publicKeyLength": "公鑰必須正好為 44 個字元",
+    "publicKeyEnding": "公鑰必須以 \"=\" 結尾",
+    "publicKeyInvalid": "公鑰包含無效字元",
+    "publicKeyIdentical": "此公鑰與目前的公鑰相同",
+    "invalidPublicKey": "無效的公鑰"
   },
   "errors": {
     "unauthorized": "未經授權",

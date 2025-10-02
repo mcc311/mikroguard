@@ -41,7 +41,7 @@
     "created": "作成日時",
     "publicKey": "公開鍵",
     "updateKey": "更新",
-    "renewConfiguration": "設定を更新",
+    "renewConfiguration": "設定を延長",
     "updateKeyButton": "鍵を更新",
     "deleteButton": "削除",
     "noPeer": {
@@ -126,7 +126,7 @@
     "expiringSoon": "まもなく期限切れ",
     "enable": "有効化",
     "disable": "無効化",
-    "renew": "更新",
+    "renew": "延長",
     "updateKey": "鍵を更新",
     "noPeers": "ピアが見つかりません"
   },
@@ -146,7 +146,7 @@
     "backButton": "管理画面に戻る"
   },
   "toast": {
-    "configRenewed": "設定が正常に更新されました!",
+    "configRenewed": "設定が正常に延長されました!",
     "configDeleted": "設定が正常に削除されました",
     "configCreated": "設定が正常に作成されました!",
     "keyUpdated": "公開鍵が正常に更新されました!",
@@ -156,11 +156,11 @@
     "templateSaved": "テンプレート設定が正常に保存されました!",
     "peerEnabled": "ピアが正常に有効化されました",
     "peerDisabled": "ピアが正常に無効化されました",
-    "peerRenewed": "ピアが正常に更新されました",
+    "peerRenewed": "ピアが正常に延長されました",
     "peerDeleted": "ピアが正常に削除されました",
     "expiredDisabled": "{count} 個の期限切れピアを無効化しました",
     "expiredDescription": "すべての期限切れ VPN 設定が自動的に無効化されました",
-    "failedToRenew": "設定の更新に失敗しました",
+    "failedToRenew": "設定の延長に失敗しました",
     "failedToDelete": "設定の削除に失敗しました",
     "failedToCreate": "設定の作成に失敗しました",
     "failedToUpdateKey": "鍵の更新に失敗しました",
