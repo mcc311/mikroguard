@@ -37,15 +37,17 @@ export function getDefaultTemplate(): Partial<WireGuardConfig> {
 }
 
 /**
+ * Custom config input (subset of WireGuardConfig fields that can be customized)
+ */
+type CustomConfigInput = Partial<Pick<WireGuardConfig, 'dns' | 'endpoint' | 'persistentKeepalive'>> & {
+  allowedIPs?: string; // Accept as comma-separated string
+};
+
+/**
  * Build config with defaults and custom values
  */
 export function buildConfigWithDefaults(
-  customConfig: {
-    dns?: string;
-    allowedIPs?: string;
-    endpoint?: string;
-    persistentKeepalive?: number;
-  },
+  customConfig: CustomConfigInput,
   address: string,
   serverPublicKey: string
 ) {

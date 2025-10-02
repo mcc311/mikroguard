@@ -40,7 +40,7 @@ export class RouterOSClient {
   /**
    * Make a GET request
    */
-  async get(path: string): Promise<unknown[]> {
+  async get<T = unknown>(path: string): Promise<T[]> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'GET',
@@ -53,13 +53,13 @@ export class RouterOSClient {
       throw new Error(`RouterOS API error: ${response.status} ${response.statusText}`);
     }
 
-    return await response.json();
+    return await response.json() as T[];
   }
 
   /**
    * Make a PUT request (add new item)
    */
-  async put(path: string, data: Record<string, unknown>): Promise<unknown> {
+  async put<T = unknown>(path: string, data: Record<string, unknown>): Promise<T> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'PUT',
@@ -75,13 +75,13 @@ export class RouterOSClient {
       throw new Error(`RouterOS API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return await response.json();
+    return await response.json() as T;
   }
 
   /**
    * Make a POST request (for commands)
    */
-  async post(path: string, data?: Record<string, unknown>): Promise<unknown> {
+  async post<T = unknown>(path: string, data?: Record<string, unknown>): Promise<T> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'POST',
@@ -97,13 +97,13 @@ export class RouterOSClient {
       throw new Error(`RouterOS API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return await response.json();
+    return await response.json() as T;
   }
 
   /**
    * Make a PATCH request
    */
-  async patch(path: string, data: Record<string, unknown>): Promise<unknown> {
+  async patch<T = unknown>(path: string, data: Record<string, unknown>): Promise<T> {
     const url = `${this.baseUrl}/rest${path}`;
     const response = await fetch(url, {
       method: 'PATCH',
@@ -119,7 +119,7 @@ export class RouterOSClient {
       throw new Error(`RouterOS API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return await response.json();
+    return await response.json() as T;
   }
 
   /**

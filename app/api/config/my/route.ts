@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername, deletePeer } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
-import { jsonResponse } from '@/lib/api-helpers';
+import { jsonResponse, getErrorMessage } from '@/lib/api-helpers';
 import { HTTP_STATUS } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/config/my
@@ -33,7 +34,7 @@ export async function GET(_request: NextRequest) {
       data: peer,
     });
   } catch (error) {
-    console.error('Failed to get config:', error);
+    logger.error('api', 'Failed to get config', error);
     return jsonResponse.error('Failed to get configuration');
   }
 }
@@ -66,7 +67,7 @@ export async function DELETE(_request: NextRequest) {
       data: { message: 'Configuration deleted successfully' },
     });
   } catch (error) {
-    console.error('Failed to delete config:', error);
-    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to delete configuration');
+    logger.error('api', 'Failed to delete config', error);
+    return jsonResponse.error(getErrorMessage(error, 'Failed to delete configuration'));
   }
 }

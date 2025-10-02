@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { getPeerByUsername, deletePeer, disablePeer, enablePeer, renewPeer } from '@/lib/routeros/wireguard';
 import { ApiResponse } from '@/types';
-import { jsonResponse } from '@/lib/api-helpers';
+import { jsonResponse, getErrorMessage } from '@/lib/api-helpers';
 import { HTTP_STATUS } from '@/lib/constants';
 
 /**
@@ -78,7 +78,7 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Failed to delete peer:', error);
-    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to delete peer');
+    return jsonResponse.error(getErrorMessage(error, 'Failed to delete peer'));
   }
 }
 
@@ -131,6 +131,6 @@ export async function PATCH(
     });
   } catch (error) {
     console.error('Failed to update peer:', error);
-    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to update peer');
+    return jsonResponse.error(getErrorMessage(error, 'Failed to update peer'));
   }
 }

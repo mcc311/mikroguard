@@ -1,23 +1,24 @@
 import { checkExpiredPeers } from '../routeros/wireguard';
 import { config } from '@/lib/config';
+import { logger } from '@/lib/logger';
 
 /**
  * Check and disable expired WireGuard peers
  * This function should be called periodically (e.g., every hour)
  */
 export async function runExpirationCheck(): Promise<void> {
-  console.log('[Cron] Running expiration check...');
+  logger.info('cron', 'Running expiration check');
 
   try {
     const expiredPeers = await checkExpiredPeers();
 
     if (expiredPeers.length > 0) {
-      console.log(`[Cron] Disabled ${expiredPeers.length} expired peers:`, expiredPeers);
+      logger.info('cron', `Disabled ${expiredPeers.length} expired peers`, { peers: expiredPeers });
     } else {
-      console.log('[Cron] No expired peers found');
+      logger.info('cron', 'No expired peers found');
     }
   } catch (error) {
-    console.error('[Cron] Failed to check expired peers:', error);
+    logger.error('cron', 'Failed to check expired peers', error);
   }
 }
 

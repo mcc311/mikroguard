@@ -2,6 +2,7 @@ import { getRouterOSClient } from './client';
 import { WireGuardPeer } from '@/types';
 import { addDays, getUnixTime, fromUnixTime } from 'date-fns';
 import { config } from '@/lib/config';
+import { logger } from '@/lib/logger';
 
 const WG_INTERFACE = config.wireguard.interfaceName;
 const EXPIRATION_DAYS = config.wireguard.expirationDays;
@@ -31,7 +32,7 @@ interface RouterOSWGInterface {
  */
 async function findPeerRawByUsername(username: string): Promise<RouterOSPeer> {
   const client = await getRouterOSClient();
-  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
+  const peers = await client.get<RouterOSPeer>('/interface/wireguard/peers');
   const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
 
   if (!peer) {
@@ -47,7 +48,7 @@ async function findPeerRawByUsername(username: string): Promise<RouterOSPeer> {
 export async function getAllPeers(): Promise<WireGuardPeer[]> {
   const client = await getRouterOSClient();
 
-  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
+  const peers = await client.get<RouterOSPeer>('/interface/wireguard/peers');
 
   if (!peers || peers.length === 0) {
     return [];
@@ -166,7 +167,7 @@ export async function deletePeer(username: string): Promise<void> {
  */
 async function getRawPeers(): Promise<RouterOSPeer[]> {
   const client = await getRouterOSClient();
-  const peers = (await client.get('/interface/wireguard/peers')) as RouterOSPeer[];
+  const peers = await client.get<RouterOSPeer>('/interface/wireguard/peers');
   return peers.filter((item) => item.interface === WG_INTERFACE);
 }
 
@@ -211,7 +212,7 @@ export async function checkExpiredPeers(): Promise<string[]> {
         await disablePeer(peer.name);
         expiredPeers.push(peer.name);
       } catch (error) {
-        console.error(`Failed to disable peer ${peer.name}:`, error);
+        logger.error('wireguard', `Failed to disable peer ${peer.name}`, error);
       }
     }
   }
@@ -233,7 +234,7 @@ function parseTTLFromComment(comment: string): number | null {
 export async function getServerPublicKey(): Promise<string> {
   const client = await getRouterOSClient();
 
-  const interfaces = (await client.get('/interface/wireguard')) as RouterOSWGInterface[];
+  const interfaces = await client.get<RouterOSWGInterface>('/interface/wireguard');
   const wgInterface = interfaces.find((i) => i.name === WG_INTERFACE);
 
   if (!wgInterface) {

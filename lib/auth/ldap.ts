@@ -7,7 +7,7 @@ interface LDAPAttribute {
   values: string[];
 }
 
-interface ExtendedSearchEntry {
+interface LDAPSearchEntry {
   objectName?: string;
   attributes: LDAPAttribute[];
 }
@@ -51,12 +51,12 @@ export async function authenticateUser(username: string, password: string): Prom
 
         searchRes.on('searchEntry', (entry) => {
           userDN = entry.objectName ? String(entry.objectName) : null;
-          const extEntry = entry as unknown as ExtendedSearchEntry;
+          const ldapEntry = entry as unknown as LDAPSearchEntry;
           userAttributes = {
-            uid: extEntry.attributes.find((a) => a.type === 'uid')?.values[0],
-            cn: extEntry.attributes.find((a) => a.type === 'cn')?.values[0],
-            mail: extEntry.attributes.find((a) => a.type === 'mail')?.values[0],
-            memberOf: extEntry.attributes.find((a) => a.type === 'memberOf')?.values,
+            uid: ldapEntry.attributes.find((a) => a.type === 'uid')?.values[0],
+            cn: ldapEntry.attributes.find((a) => a.type === 'cn')?.values[0],
+            mail: ldapEntry.attributes.find((a) => a.type === 'mail')?.values[0],
+            memberOf: ldapEntry.attributes.find((a) => a.type === 'memberOf')?.values,
           };
         });
 

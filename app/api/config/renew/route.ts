@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/auth-options';
 import { renewPeer, getPeerByUsername } from '@/lib/routeros/wireguard';
 import { buildConfigFile } from '@/lib/wireguard/config-builder';
 import { ApiResponse, WireGuardConfig } from '@/types';
-import { jsonResponse } from '@/lib/api-helpers';
+import { jsonResponse, getErrorMessage } from '@/lib/api-helpers';
 import { getServerPublicKeyOrFallback } from '@/lib/routeros/wireguard';
 import { buildConfigWithDefaults } from '@/lib/wireguard/config-builder';
 
@@ -57,6 +57,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to renew config:', error);
-    return jsonResponse.error(error instanceof Error ? error.message : 'Failed to renew configuration');
+    return jsonResponse.error(getErrorMessage(error, 'Failed to renew configuration'));
   }
 }
