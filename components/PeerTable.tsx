@@ -12,16 +12,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
-import { RefreshCw, Ban, Play, Trash2, MoreVertical, Copy } from 'lucide-react';
+import { RefreshCw, Ban, Play, Trash2, MoreVertical, Copy, Key } from 'lucide-react';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface PeerTableProps {
   peers: WireGuardPeer[];
-  onAction?: (username: string, action: 'enable' | 'disable' | 'renew' | 'delete') => void;
+  onAction?: (username: string, action: 'enable' | 'disable' | 'renew' | 'delete' | 'edit-key') => void;
   showActions?: boolean;
 }
 
 export function PeerTable({ peers, onAction, showActions = false }: PeerTableProps) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
   const getExpirationStatus = (expiresAt: Date) => {
     const now = new Date();
     const diff = expiresAt.getTime() - now.getTime();
@@ -32,9 +42,17 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
     return { label: `${days}d left`, variant: 'secondary' as const };
   };
 
+  const handleCopyPublicKey = (publicKey: string) => {
+    navigator.clipboard.writeText(publicKey);
+    setCopiedKey(publicKey);
+    toast.success('Public key copied!');
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
+    <TooltipProvider>
+      <div className="rounded-md border">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Username</TableHead>
@@ -92,9 +110,26 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
                     </div>
                   </TableCell>
                   <TableCell>
-                    <code className="font-mono text-xs text-muted-foreground">
-                      {peer.publicKey.substring(0, 16)}...
-                    </code>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <code
+                          className="font-mono text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted px-2 py-1 rounded transition-colors"
+                          onClick={() => handleCopyPublicKey(peer.publicKey)}
+                        >
+                          {copiedKey === peer.publicKey ? (
+                            <>Copied!</>
+                          ) : (
+                            <>{peer.publicKey.substring(0, 16)}...</>
+                          )}
+                        </code>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="max-w-xs">
+                          <p className="text-xs font-semibold mb-1">Click to copy</p>
+                          <code className="text-xs break-all">{peer.publicKey}</code>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   {showActions && onAction && (
                     <TableCell>
@@ -123,6 +158,10 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Renew
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onAction(peer.name, 'edit-key')}>
+                            <Key className="mr-2 h-4 w-4" />
+                            Edit Key
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => onAction(peer.name, 'delete')}
@@ -142,5 +181,6 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
         </TableBody>
       </Table>
     </div>
+    </TooltipProvider>
   );
 }

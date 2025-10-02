@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { PeerTable } from '@/components/PeerTable';
 import { StatsCardSkeleton, PeerTableSkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { WireGuardPeer } from '@/types';
@@ -40,6 +50,12 @@ export default function AdminPage() {
     open: false,
     username: '',
   });
+  const [editKeyDialog, setEditKeyDialog] = useState<{ open: boolean; username: string; currentKey: string }>({
+    open: false,
+    username: '',
+    currentKey: '',
+  });
+  const [newPublicKey, setNewPublicKey] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -105,9 +121,18 @@ export default function AdminPage() {
     }
   };
 
-  const handlePeerAction = async (username: string, action: 'enable' | 'disable' | 'renew' | 'delete') => {
+  const handlePeerAction = async (username: string, action: 'enable' | 'disable' | 'renew' | 'delete' | 'edit-key') => {
     if (action === 'delete') {
       setDeleteDialog({ open: true, username });
+      return;
+    }
+
+    if (action === 'edit-key') {
+      const peer = peers.find(p => p.name === username);
+      if (peer) {
+        setEditKeyDialog({ open: true, username, currentKey: peer.publicKey });
+        setNewPublicKey('');
+      }
       return;
     }
 
@@ -171,6 +196,48 @@ export default function AdminPage() {
       }
     } catch {
       toast.error('Failed to delete', {
+        description: 'Network error, please try again later',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateKey = async () => {
+    if (!newPublicKey.trim()) {
+      toast.error('Please enter a public key');
+      return;
+    }
+
+    const username = editKeyDialog.username;
+    setEditKeyDialog({ open: false, username: '', currentKey: '' });
+    setActionLoading(true);
+
+    try {
+      const res = await fetch('/api/config/update-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          newPublicKey: newPublicKey.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success('Public key updated successfully', {
+          description: `Updated public key for user ${username}`,
+        });
+        setNewPublicKey('');
+        await fetchPeers();
+      } else {
+        toast.error('Failed to update public key', {
+          description: data.error || 'Please try again later',
+        });
+      }
+    } catch {
+      toast.error('Failed to update public key', {
         description: 'Network error, please try again later',
       });
     } finally {
@@ -330,6 +397,54 @@ export default function AdminPage() {
           </Card>
         </div>
       </main>
+
+      {/* Edit Key Dialog */}
+      <Dialog open={editKeyDialog.open} onOpenChange={(open) => setEditKeyDialog({ ...editKeyDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Public Key</DialogTitle>
+            <DialogDescription>
+              Update the WireGuard public key for user{' '}
+              <span className="font-semibold text-foreground">{editKeyDialog.username}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentKey">Current Public Key</Label>
+              <Input
+                id="currentKey"
+                value={editKeyDialog.currentKey}
+                readOnly
+                className="font-mono text-xs bg-muted"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newKey">New Public Key</Label>
+              <Input
+                id="newKey"
+                placeholder="Enter new public key..."
+                value={newPublicKey}
+                onChange={(e) => setNewPublicKey(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Should be 44 characters and end with &apos;=&apos;
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditKeyDialog({ open: false, username: '', currentKey: '' })}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateKey} disabled={!newPublicKey.trim() || actionLoading}>
+              {actionLoading ? 'Updating...' : 'Update Key'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
