@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Shield, ArrowLeft, Save } from 'lucide-react';
-import Link from 'next/link';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Session } from 'next-auth';
+import { LoadingPage } from '@/components/loading-skeletons';
 
 interface ExtendedSession extends Session {
   user: Session['user'] & {
@@ -101,11 +101,7 @@ export default function TemplateConfigPage() {
   };
 
   if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (status === 'unauthenticated' || !(session as ExtendedSession | null)?.user?.isAdmin) {
@@ -113,31 +109,7 @@ export default function TemplateConfigPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">WireGuard Manager - Admin</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {session?.user?.name}
-            </span>
-            <Link href="/admin">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Admin
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={() => router.push('/api/auth/signout')}>
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-6">
           <div>
@@ -219,6 +191,6 @@ export default function TemplateConfigPage() {
           </Card>
         </div>
       </main>
-    </div>
+    </>
   );
 }

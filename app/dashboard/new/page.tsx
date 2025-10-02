@@ -5,22 +5,50 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Shield, Copy, Check, ArrowRight } from 'lucide-react';
+import { Copy, Check, ArrowRight, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { UI_TIMEOUTS } from '@/lib/constants';
+import { LoadingPage } from '@/components/loading-skeletons';
+import { Input } from '@/components/ui/input';
 
 export default function NewConfigPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [publicKey, setPublicKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [generatedConfig, setGeneratedConfig] = useState('');
   const [copied, setCopied] = useState(false);
+  const [keyError, setKeyError] = useState('');
+
+  // WireGuard public key is 44 characters base64 string ending with '='
+  const validatePublicKey = (key: string): boolean => {
+    const trimmedKey = key.trim();
+
+    // Check length
+    if (trimmedKey.length !== 44) {
+      setKeyError('Public key must be exactly 44 characters long');
+      return false;
+    }
+
+    // Check if ends with '='
+    if (!trimmedKey.endsWith('=')) {
+      setKeyError('Public key must end with "="');
+      return false;
+    }
+
+    // Check base64 format (alphanumeric + / + + and ends with =)
+    const base64Regex = /^[A-Za-z0-9+/]{43}=$/;
+    if (!base64Regex.test(trimmedKey)) {
+      setKeyError('Public key contains invalid characters');
+      return false;
+    }
+
+    setKeyError('');
+    return true;
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -43,8 +71,15 @@ export default function NewConfigPage() {
   }, [status, router]);
 
   const handleSubmitPublicKey = async () => {
-    if (!publicKey.trim()) {
-      toast.error('Please enter your public key');
+    const trimmedKey = publicKey.trim();
+
+    if (!trimmedKey) {
+      setKeyError('Please enter your public key');
+      return;
+    }
+
+    // Validate public key format
+    if (!validatePublicKey(trimmedKey)) {
       return;
     }
 
@@ -53,14 +88,14 @@ export default function NewConfigPage() {
       const res = await fetch('/api/config/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicKey: publicKey.trim() }),
+        body: JSON.stringify({ publicKey: trimmedKey }),
       });
 
       const data = await res.json();
 
       if (data.success) {
         setGeneratedConfig(data.data.configFile);
-        setStep(3);
+        setStep(2);
         toast.success('Configuration created successfully!');
       } else {
         toast.error('Failed to create config: ' + data.error);
@@ -69,6 +104,17 @@ export default function NewConfigPage() {
       toast.error('Failed to create config');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePublicKeyChange = (value: string) => {
+    // Remove any newlines or whitespace
+    const cleanedValue = value.replace(/\s/g, '');
+    setPublicKey(cleanedValue);
+
+    // Clear error when user starts typing
+    if (keyError) {
+      setKeyError('');
     }
   };
 
@@ -84,11 +130,7 @@ export default function NewConfigPage() {
   };
 
   if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (status === 'unauthenticated') {
@@ -96,30 +138,7 @@ export default function NewConfigPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">WireGuard Manager</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {session?.user?.name}
-            </span>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm">
-                Dashboard
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={() => router.push('/api/auth/signout')}>
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
@@ -135,168 +154,186 @@ export default function NewConfigPage() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 1 ? 'border-primary bg-primary text-white' : 'border-muted'}`}>
                 1
               </div>
-              <span className="text-sm font-medium">Create Tunnel</span>
+              <span className="text-sm font-medium">Submit Public Key</span>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
             <div className={`flex items-center gap-2 ${step >= 2 ? 'text-primary' : 'text-muted-foreground'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'border-primary bg-primary text-white' : 'border-muted'}`}>
                 2
               </div>
-              <span className="text-sm font-medium">Submit Key</span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground" />
-            <div className={`flex items-center gap-2 ${step >= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'border-primary bg-primary text-white' : 'border-muted'}`}>
-                3
-              </div>
-              <span className="text-sm font-medium">Copy Config</span>
+              <span className="text-sm font-medium">Copy Configuration</span>
             </div>
           </div>
 
-          {/* Step 1: Create Empty Tunnel */}
+          {/* Step 1: Submit Public Key */}
           {step === 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Step 1: Create an Empty Tunnel</CardTitle>
-                <CardDescription>
-                  First, create a new empty tunnel in your WireGuard client
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Instructions:</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>Open your WireGuard application</li>
-                    <li>Click on &quot;Add Empty Tunnel&quot; or &quot;Create New Tunnel&quot;</li>
-                    <li>The app will generate a key pair for you automatically</li>
-                    <li>Give your tunnel a name (e.g., &quot;My VPN&quot;)</li>
-                  </ol>
-                </div>
-                <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                  <p className="text-sm">
-                    <strong>Note:</strong> Do not fill in any configuration details yet. We&apos;ll provide the complete configuration in the next steps.
-                  </p>
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={() => setStep(2)}>
-                    Continue to Next Step
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 2: Submit Public Key */}
-          {step === 2 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Step 2: Copy and Submit Your Public Key</CardTitle>
-                <CardDescription>
-                  Find your public key in the tunnel you just created and paste it here
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">How to find your public key:</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>In WireGuard, select the tunnel you just created</li>
-                    <li>Look for the &quot;Public key&quot; field in the Interface section</li>
-                    <li>Copy the public key (it looks like: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">abc123...xyz=</code>)</li>
-                    <li>Paste it in the field below</li>
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="publicKey">Your WireGuard Public Key</Label>
-                  <Input
-                    id="publicKey"
-                    placeholder="Enter your public key here..."
-                    value={publicKey}
-                    onChange={(e) => setPublicKey(e.target.value)}
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The public key should be 44 characters long and end with &apos;=&apos;
-                  </p>
-                </div>
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={() => setStep(1)}>
-                    Back
-                  </Button>
-                  <Button onClick={handleSubmitPublicKey} disabled={loading || !publicKey.trim()}>
-                    {loading ? 'Creating Configuration...' : 'Submit and Generate Config'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 3: Copy Configuration */}
-          {step === 3 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Step 3: Copy Your Configuration</CardTitle>
-                <CardDescription>
-                  Your configuration is ready! Copy it and paste it into your WireGuard tunnel
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Final Steps:</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>Click the &quot;Copy Configuration&quot; button below</li>
-                    <li>Go back to your WireGuard app</li>
-                    <li>Edit your tunnel and replace ALL the content with the copied configuration</li>
-                    <li>Save the tunnel</li>
-                    <li>Activate your tunnel to connect!</li>
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Your WireGuard Configuration</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyConfig}
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Configuration
-                        </>
-                      )}
-                    </Button>
+            <div className="space-y-6">
+              {/* Instructions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Before You Start</CardTitle>
+                  <CardDescription>
+                    Follow these steps to prepare your WireGuard tunnel
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">1. Create an Empty Tunnel</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                      <li>Open your WireGuard application</li>
+                      <li>Click &quot;Add Empty Tunnel&quot; or &quot;Create New Tunnel&quot;</li>
+                      <li>WireGuard will generate a key pair for you automatically</li>
+                      <li>Give it a name (e.g., &quot;My VPN&quot;)</li>
+                    </ul>
                   </div>
-                  <Textarea
-                    value={generatedConfig}
-                    readOnly
-                    className="font-mono text-xs h-64"
-                  />
-                </div>
-                <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                  <p className="text-sm">
-                    <strong>Important:</strong> Make sure to replace the entire content of your tunnel configuration, including the private key that was already there. The configuration we provide includes the correct server settings and your assigned IP address.
-                  </p>
-                </div>
-                <div className="flex justify-end">
-                  <Link href="/dashboard">
-                    <Button>
-                      Go to Dashboard
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+                  <div>
+                    <h4 className="font-semibold mb-2">2. Find Your Public Key</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                      <li>In the tunnel you created, find the Interface section</li>
+                      <li>Look for the &quot;Public key&quot; field</li>
+                      <li>Copy the entire key (it looks like: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded text-xs">abc123...xyz=</code>)</li>
+                    </ul>
+                  </div>
+                  <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p className="text-sm">
+                      <strong>Note:</strong> Don&apos;t fill in any other configuration yet. We&apos;ll provide the complete config in the next step.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit Your Public Key</CardTitle>
+                  <CardDescription>
+                    Paste your WireGuard public key below
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="publicKey">Public Key</Label>
+                    <Input
+                      id="publicKey"
+                      placeholder="Paste your public key here..."
+                      value={publicKey}
+                      onChange={(e) => handlePublicKeyChange(e.target.value)}
+                      className={`font-mono text-sm ${keyError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                    />
+                    {keyError ? (
+                      <div className="flex items-start gap-2 text-red-600 text-sm">
+                        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{keyError}</span>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Should be 44 characters and end with &apos;=&apos;
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleSubmitPublicKey}
+                    disabled={loading || !publicKey.trim()}
+                    className="w-full"
+                  >
+                    {loading ? 'Creating Configuration...' : 'Generate Configuration'}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 2: Copy Configuration */}
+          {step === 2 && (
+            <div className="space-y-6">
+              {/* Instructions First */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>How to Apply Your Configuration</CardTitle>
+                  <CardDescription>
+                    Follow these steps carefully to complete your setup
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li className="text-base">
+                        <strong>Copy the configuration below</strong> using the Copy button
+                      </li>
+                      <li className="text-base">
+                        Go back to your WireGuard app and <strong>edit your tunnel</strong>
+                      </li>
+                      <li className="text-base">
+                        <strong>Keep your Private Key</strong> - only replace the content <strong>after</strong> the Private Key line
+                      </li>
+                      <li className="text-base">
+                        Paste the copied configuration, making sure to keep your own Private Key in the [Interface] section
+                      </li>
+                      <li className="text-base">
+                        Save and activate your tunnel to connect
+                      </li>
+                    </ol>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <p className="text-sm">
+                      <strong>Important:</strong> The Private Key in the configuration below is a placeholder. You must keep your own Private Key that was generated by WireGuard.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Configuration Display */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your WireGuard Configuration</CardTitle>
+                  <CardDescription>
+                    Copy this configuration and apply it to your tunnel
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-semibold">Configuration</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyConfig}
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="relative">
+                      <pre className="bg-muted rounded-lg p-4 text-xs font-mono overflow-x-auto max-h-80 overflow-y-auto">
+                        <code>{generatedConfig}</code>
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Link href="/dashboard">
+                      <Button size="lg">
+                        Go to Dashboard
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </main>
-    </div>
+    </>
   );
 }
