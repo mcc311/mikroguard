@@ -22,6 +22,7 @@ export default function NewConfigPage() {
   const [generatedConfig, setGeneratedConfig] = useState('');
   const [copied, setCopied] = useState(false);
   const [keyError, setKeyError] = useState('');
+  const [checkingExisting, setCheckingExisting] = useState(true);
 
   // WireGuard public key is 44 characters base64 string ending with '='
   const validatePublicKey = (key: string): boolean => {
@@ -64,8 +65,16 @@ export default function NewConfigPage() {
         .then(data => {
           if (data.success && data.data) {
             // User already has config, redirect to dashboard
+            toast.error('You already have a configuration. Redirecting to dashboard...');
             router.push('/dashboard');
+          } else {
+            // User doesn't have config, allow access
+            setCheckingExisting(false);
           }
+        })
+        .catch(() => {
+          // On error, assume no config and allow access
+          setCheckingExisting(false);
         });
     }
   }, [status, router]);
@@ -129,7 +138,7 @@ export default function NewConfigPage() {
     }
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || checkingExisting) {
     return <LoadingPage />;
   }
 
