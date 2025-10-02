@@ -14,12 +14,13 @@ interface Language {
   code: string;
   name: string;
   nativeName: string;
+  flag: string;
 }
 
 const languages: Language[] = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'zh-TW', name: 'Traditional Chinese', nativeName: '繁體中文' },
-  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'zh-TW', name: 'Traditional Chinese', nativeName: '繁體中文', flag: '🇹🇼' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
 ];
 
 interface LanguageSwitcherProps {
@@ -42,7 +43,7 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
-          <Globe className="h-4 w-4" />
+          <span className="text-lg">{currentLanguage.flag}</span>
           <span className="hidden sm:inline">{currentLanguage.nativeName}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -53,9 +54,10 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
             onClick={() => handleLanguageChange(language.code)}
             className={currentLocale === language.code ? 'bg-accent' : ''}
           >
+            <span className="text-lg mr-2">{language.flag}</span>
             <span className="font-medium">{language.nativeName}</span>
             {currentLocale === language.code && (
-              <span className="ml-2 text-xs text-muted-foreground">✓</span>
+              <span className="ml-auto text-xs text-muted-foreground">✓</span>
             )}
           </DropdownMenuItem>
         ))}
