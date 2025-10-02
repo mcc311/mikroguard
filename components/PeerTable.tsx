@@ -22,6 +22,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { RefreshCw, Ban, Play, Trash2, MoreVertical, Copy, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface PeerTableProps {
   peers: WireGuardPeer[];
@@ -30,6 +31,9 @@ interface PeerTableProps {
 }
 
 export function PeerTable({ peers, onAction, showActions = false }: PeerTableProps) {
+  const t = useTranslations('peerTable');
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const getExpirationStatus = (expiresAt: Date) => {
@@ -45,7 +49,7 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
   const handleCopyPublicKey = (publicKey: string) => {
     navigator.clipboard.writeText(publicKey);
     setCopiedKey(publicKey);
-    toast.success('Public key copied!');
+    toast.success(tToast('publicKeyCopied'));
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -55,19 +59,19 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
         <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Username</TableHead>
-            <TableHead>IP Address</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Expiration</TableHead>
-            <TableHead>Public Key</TableHead>
-            {showActions && <TableHead className="w-[70px]"></TableHead>}
+            <TableHead>{t('username')}</TableHead>
+            <TableHead>{t('ipAddress')}</TableHead>
+            <TableHead>{t('status')}</TableHead>
+            <TableHead>{t('expires')}</TableHead>
+            <TableHead>{t('publicKey')}</TableHead>
+            {showActions && <TableHead className="w-[70px]">{t('actions')}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {peers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={showActions ? 6 : 5} className="h-24 text-center">
-                <p className="text-muted-foreground">No peers found</p>
+                <p className="text-muted-foreground">{t('noPeers')}</p>
               </TableCell>
             </TableRow>
           ) : (
@@ -96,7 +100,7 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
                       variant={peer.disabled ? 'secondary' : 'default'}
                       className={peer.disabled ? '' : 'bg-green-500 hover:bg-green-600 text-white'}
                     >
-                      {peer.disabled ? 'Disabled' : 'Active'}
+                      {peer.disabled ? t('disabled') : t('active')}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -141,26 +145,26 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {peer.disabled ? (
                             <DropdownMenuItem onClick={() => onAction(peer.name, 'enable')}>
                               <Play className="mr-2 h-4 w-4" />
-                              Enable
+                              {t('enable')}
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem onClick={() => onAction(peer.name, 'disable')}>
                               <Ban className="mr-2 h-4 w-4" />
-                              Disable
+                              {t('disable')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => onAction(peer.name, 'renew')}>
                             <RefreshCw className="mr-2 h-4 w-4" />
-                            Renew
+                            {t('renew')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onAction(peer.name, 'edit-key')}>
                             <Key className="mr-2 h-4 w-4" />
-                            Edit Key
+                            {t('updateKey')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -168,7 +172,7 @@ export function PeerTable({ peers, onAction, showActions = false }: PeerTablePro
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            {tCommon('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -28,12 +28,16 @@ import { WireGuardPeer } from '@/types';
 import { DashboardCardSkeleton, ConfigDisplaySkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Shield, Plus, RefreshCw, PenLine, Copy, Check, Trash2, AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { toast } from 'sonner';
 import { UI_TIMEOUTS, TIME_THRESHOLDS } from '@/lib/constants';
 import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
+import { useTranslations } from 'next-intl';
 
 export default function DashboardPage() {
+  const t = useTranslations('dashboard');
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const { status } = useSession();
   const [peer, setPeer] = useState<WireGuardPeer | null>(null);
   const [config, setConfig] = useState<string | null>(null);
@@ -95,12 +99,12 @@ export default function DashboardPage() {
 
       if (data.success) {
         await fetchConfig();
-        toast.success('Configuration renewed successfully!');
+        toast.success(tToast('configRenewed'));
       } else {
-        toast.error('Failed to renew config: ' + data.error);
+        toast.error(tToast('failedToRenew') + ': ' + data.error);
       }
     } catch {
-      toast.error('Failed to renew config');
+      toast.error(tToast('failedToRenew'));
     } finally {
       setActionLoading(false);
     }
@@ -127,12 +131,12 @@ export default function DashboardPage() {
         await fetchConfig();
         setShowKeyDialog(false);
         setNewPublicKey('');
-        toast.success('Public key updated successfully!');
+        toast.success(tToast('keyUpdated'));
       } else {
-        toast.error('Failed to update key: ' + data.error);
+        toast.error(tToast('failedToUpdateKey') + ': ' + data.error);
       }
     } catch {
-      toast.error('Failed to update key');
+      toast.error(tToast('failedToUpdateKey'));
     } finally {
       setActionLoading(false);
     }
@@ -144,9 +148,9 @@ export default function DashboardPage() {
       await navigator.clipboard.writeText(config);
       setCopied(true);
       setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
-      toast.success('Configuration copied to clipboard!');
+      toast.success(tToast('configCopied'));
     } catch {
-      toast.error('Failed to copy to clipboard');
+      toast.error(tToast('failedToCopy'));
     }
   };
 
@@ -163,12 +167,12 @@ export default function DashboardPage() {
       if (data.success) {
         setPeer(null);
         setConfig(null);
-        toast.success('Configuration deleted successfully');
+        toast.success(tToast('configDeleted'));
       } else {
-        toast.error('Failed to delete config: ' + data.error);
+        toast.error(tToast('failedToDelete') + ': ' + data.error);
       }
     } catch {
-      toast.error('Failed to delete config');
+      toast.error(tToast('failedToDelete'));
     } finally {
       setActionLoading(false);
     }
@@ -217,8 +221,8 @@ export default function DashboardPage() {
               />
             )}
             <CardHeader>
-              <CardTitle>VPN Configuration</CardTitle>
-              <CardDescription>Your WireGuard connection details</CardDescription>
+              <CardTitle>{t('title')}</CardTitle>
+              <CardDescription>{t('description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {peer ? (
@@ -227,7 +231,7 @@ export default function DashboardPage() {
                   <div className="grid gap-6 sm:grid-cols-2">
                     {/* IP Address with Copy */}
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">IP Address</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('ipAddress')}</p>
                       <div className="flex items-center gap-2">
                         <code className="text-lg font-mono font-semibold">{peer.allowedAddress}</code>
                         <Button
@@ -236,7 +240,7 @@ export default function DashboardPage() {
                           className="h-6 w-6"
                           onClick={() => {
                             navigator.clipboard.writeText(peer.allowedAddress);
-                            toast.success('IP address copied!');
+                            toast.success(tToast('ipCopied'));
                           }}
                         >
                           <Copy className="h-3 w-3" />
@@ -246,7 +250,7 @@ export default function DashboardPage() {
 
                     {/* Expiration with Countdown */}
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Expires</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('expires')}</p>
                       <div>
                         <p
                           className={`text-lg font-semibold ${
@@ -263,7 +267,7 @@ export default function DashboardPage() {
                   {/* Public Key Section */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-muted-foreground">Public Key</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('publicKey')}</p>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -274,7 +278,7 @@ export default function DashboardPage() {
                         className="h-7 text-xs"
                       >
                         <PenLine className="w-3 h-3 mr-1" />
-                        Update
+                        {t('updateKey')}
                       </Button>
                     </div>
                     <div className="relative group">
@@ -287,7 +291,7 @@ export default function DashboardPage() {
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7"
                         onClick={() => {
                           navigator.clipboard.writeText(peer.publicKey);
-                          toast.success('Public key copied!');
+                          toast.success(tToast('publicKeyCopied'));
                         }}
                       >
                         <Copy className="w-3 h-3" />
@@ -299,7 +303,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col sm:flex-row gap-2 pt-2">
                     <Button onClick={handleRenewConfig} disabled={actionLoading} className="flex-1" size="lg">
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Renew Configuration
+                      {t('renewConfiguration')}
                     </Button>
                     <Button
                       variant="outline"
@@ -311,7 +315,7 @@ export default function DashboardPage() {
                       size="lg"
                     >
                       <PenLine className="w-4 h-4 mr-2" />
-                      Update Key
+                      {t('updateKeyButton')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -328,15 +332,14 @@ export default function DashboardPage() {
                   <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <Shield className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">No VPN Configuration</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('noPeer.title')}</h3>
                   <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                    You haven&apos;t created a WireGuard configuration yet. Create one now to get started with secure VPN
-                    access.
+                    {t('noPeer.description')}
                   </p>
                   <Link href="/dashboard/new">
                     <Button size="lg">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Configuration
+                      {t('noPeer.createButton')}
                     </Button>
                   </Link>
                 </div>
@@ -350,19 +353,19 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Configuration File</CardTitle>
-                    <CardDescription>Copy this to your WireGuard client</CardDescription>
+                    <CardTitle>{t('configFile.title')}</CardTitle>
+                    <CardDescription>{t('configFile.description')}</CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={handleCopyConfig}>
                     {copied ? (
                       <>
                         <Check className="w-4 h-4 mr-2" />
-                        Copied!
+                        {tCommon('copied')}
                       </>
                     ) : (
                       <>
                         <Copy className="w-4 h-4 mr-2" />
-                        Copy
+                        {tCommon('copy')}
                       </>
                     )}
                   </Button>
@@ -382,17 +385,17 @@ export default function DashboardPage() {
       <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Update Public Key</DialogTitle>
+            <DialogTitle>{t('updateKeyDialog.title')}</DialogTitle>
             <DialogDescription>
-              Enter your new WireGuard public key. This is useful when you change devices or regenerate your keys.
+              {t('updateKeyDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="publicKey">Public Key</Label>
+              <Label htmlFor="publicKey">{t('updateKeyDialog.label')}</Label>
               <Input
                 id="publicKey"
-                placeholder="Enter your new public key..."
+                placeholder={t('updateKeyDialog.placeholder')}
                 value={newPublicKey}
                 onChange={(e) => {
                   setNewPublicKey(e.target.value);
@@ -407,7 +410,7 @@ export default function DashboardPage() {
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  The public key should be 44 characters long and end with &apos;=&apos;
+                  {t('updateKeyDialog.hint')}
                 </p>
               )}
             </div>
@@ -420,10 +423,10 @@ export default function DashboardPage() {
                 setNewPublicKey('');
               }}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleUpdateKey} disabled={actionLoading}>
-              {actionLoading ? 'Updating...' : 'Update Key'}
+              {actionLoading ? t('updateKeyDialog.updating') : t('updateKeyDialog.label')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -433,19 +436,18 @@ export default function DashboardPage() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Configuration?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete your WireGuard configuration? This action cannot be undone.
-              You will need to create a new configuration to connect to the VPN again.
+              {t('deleteDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfig}
               className="bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500"
             >
-              Delete
+              {tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

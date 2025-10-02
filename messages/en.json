@@ -1,0 +1,187 @@
+{
+  "common": {
+    "appName": "WireGuard Manager",
+    "loading": "Loading...",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "update": "Update",
+    "create": "Create",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "user": "User",
+    "admin": "Admin",
+    "administrator": "Administrator",
+    "copied": "Copied!",
+    "copy": "Copy"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "adminPanel": "Admin Panel",
+    "templateSettings": "Template Settings",
+    "newConfiguration": "New Configuration"
+  },
+  "login": {
+    "title": "WireGuard Manager",
+    "description": "Sign in with your LDAP credentials to manage VPN configurations",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid username or password",
+    "errorOccurred": "An error occurred during login"
+  },
+  "dashboard": {
+    "title": "VPN Configuration",
+    "description": "Your WireGuard connection details",
+    "ipAddress": "IP Address",
+    "expires": "Expires",
+    "created": "Created",
+    "publicKey": "Public Key",
+    "updateKey": "Update",
+    "renewConfiguration": "Renew Configuration",
+    "updateKeyButton": "Update Key",
+    "deleteButton": "Delete",
+    "noPeer": {
+      "title": "No VPN Configuration",
+      "description": "You haven't created a WireGuard configuration yet. Create one now to get started with secure VPN access.",
+      "createButton": "Create Configuration"
+    },
+    "configFile": {
+      "title": "Configuration File",
+      "description": "Copy this to your WireGuard client"
+    },
+    "updateKeyDialog": {
+      "title": "Update Public Key",
+      "description": "Enter your new WireGuard public key. This is useful when you change devices or regenerate your keys.",
+      "label": "Public Key",
+      "placeholder": "Enter your new public key...",
+      "hint": "The public key should be 44 characters long and end with '='",
+      "updating": "Updating..."
+    },
+    "deleteDialog": {
+      "title": "Delete Configuration?",
+      "description": "Are you sure you want to delete your WireGuard configuration? This action cannot be undone. You will need to create a new configuration to connect to the VPN again."
+    }
+  },
+  "dashboardNew": {
+    "title": "Create VPN Configuration",
+    "description": "Generate a new WireGuard configuration",
+    "publicKeyLabel": "Public Key",
+    "publicKeyPlaceholder": "Enter your WireGuard public key",
+    "publicKeyHint": "Generate this with:",
+    "publicKeyCommand": "wg genkey | wg pubkey",
+    "creating": "Creating...",
+    "createButton": "Create Configuration",
+    "backButton": "Back to Dashboard"
+  },
+  "admin": {
+    "stats": {
+      "totalPeers": "Total Peers",
+      "active": "Active",
+      "expiringSoon": "Expiring Soon",
+      "expired": "Expired"
+    },
+    "actions": {
+      "title": "Management Actions",
+      "description": "Administrative operations",
+      "refresh": "Refresh",
+      "checkExpired": "Check & Disable Expired",
+      "templateButton": "Template Settings"
+    },
+    "peers": {
+      "title": "All Peers",
+      "description": "Manage all WireGuard peer configurations"
+    },
+    "updateKeyDialog": {
+      "title": "Update Public Key",
+      "description": "Update the WireGuard public key for user",
+      "currentKey": "Current Public Key",
+      "newKey": "New Public Key",
+      "newKeyPlaceholder": "Enter new public key...",
+      "hint": "Should be 44 characters and end with '='",
+      "updating": "Updating...",
+      "updateButton": "Update Key"
+    },
+    "deleteDialog": {
+      "title": "Delete Configuration?",
+      "description": "Are you sure you want to delete the WireGuard configuration for user",
+      "warningLine1": "This action cannot be undone.",
+      "warningLine2": "The user will need to create a new configuration to connect to the VPN again."
+    }
+  },
+  "peerTable": {
+    "username": "Username",
+    "ipAddress": "IP Address",
+    "status": "Status",
+    "expires": "Expires",
+    "created": "Created",
+    "publicKey": "Public Key",
+    "actions": "Actions",
+    "active": "Active",
+    "disabled": "Disabled",
+    "expired": "Expired",
+    "expiringSoon": "Expiring Soon",
+    "enable": "Enable",
+    "disable": "Disable",
+    "renew": "Renew",
+    "updateKey": "Update Key",
+    "noPeers": "No peers found"
+  },
+  "template": {
+    "title": "Global Template Settings",
+    "description": "Configure default settings for new VPN configurations",
+    "dns": "DNS Servers",
+    "dnsPlaceholder": "8.8.8.8, 1.1.1.1",
+    "endpoint": "Endpoint",
+    "endpointPlaceholder": "vpn.example.com:51820",
+    "allowedIPs": "Allowed IPs",
+    "allowedIPsPlaceholder": "0.0.0.0/0, ::/0",
+    "keepalive": "Persistent Keepalive",
+    "keepalivePlaceholder": "25",
+    "saving": "Saving...",
+    "saveButton": "Save Template",
+    "backButton": "Back to Admin"
+  },
+  "toast": {
+    "configRenewed": "Configuration renewed successfully!",
+    "configDeleted": "Configuration deleted successfully",
+    "configCreated": "Configuration created successfully!",
+    "keyUpdated": "Public key updated successfully!",
+    "ipCopied": "IP address copied!",
+    "publicKeyCopied": "Public key copied!",
+    "configCopied": "Configuration copied to clipboard!",
+    "templateSaved": "Template settings saved successfully!",
+    "peerEnabled": "Peer enabled successfully",
+    "peerDisabled": "Peer disabled successfully",
+    "peerRenewed": "Peer renewed successfully",
+    "peerDeleted": "Peer deleted successfully",
+    "expiredDisabled": "Disabled {count} expired peers",
+    "expiredDescription": "All expired VPN configurations have been automatically disabled",
+    "failedToRenew": "Failed to renew config",
+    "failedToDelete": "Failed to delete config",
+    "failedToCreate": "Failed to create config",
+    "failedToUpdateKey": "Failed to update key",
+    "failedToCopy": "Failed to copy to clipboard",
+    "failedToSave": "Failed to save template",
+    "failedToCheckExpired": "Failed to check expired peers",
+    "networkError": "Network error, please try again later",
+    "tryAgainLater": "Please try again later"
+  },
+  "validation": {
+    "publicKeyRequired": "Public key is required",
+    "publicKeyLength": "Public key must be exactly 44 characters long",
+    "publicKeyEnding": "Public key must end with \"=\"",
+    "publicKeyInvalid": "Public key contains invalid characters",
+    "publicKeyIdentical": "This key is identical to the current one",
+    "invalidPublicKey": "Invalid public key"
+  },
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "notFound": "Not found",
+    "serverError": "Server error",
+    "unknownError": "Unknown error occurred"
+  }
+}

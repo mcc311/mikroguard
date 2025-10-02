@@ -28,11 +28,12 @@ import { PeerTable } from '@/components/PeerTable';
 import { StatsCardSkeleton, PeerTableSkeleton, LoadingPage } from '@/components/loading-skeletons';
 import { WireGuardPeer } from '@/types';
 import { Users, CheckCircle, Clock, AlertTriangle as AlertIcon, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { TIME_THRESHOLDS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { Session } from 'next-auth';
 import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
+import { useTranslations } from 'next-intl';
 
 interface ExtendedSession extends Session {
   user: Session['user'] & {
@@ -41,6 +42,9 @@ interface ExtendedSession extends Session {
 }
 
 export default function AdminPage() {
+  const t = useTranslations('admin');
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const { data: session, status } = useSession();
   const [peers, setPeers] = useState<WireGuardPeer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,18 +99,18 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success(`Disabled ${data.data.expiredCount} expired peers`, {
-          description: 'All expired VPN configurations have been automatically disabled',
+        toast.success(tToast('expiredDisabled').replace('{count}', data.data.expiredCount), {
+          description: tToast('expiredDescription'),
         });
         await fetchPeers();
       } else {
-        toast.error('Failed to check expired peers', {
-          description: data.error || 'Please try again later',
+        toast.error(tToast('failedToCheckExpired'), {
+          description: data.error || tToast('tryAgainLater'),
         });
       }
     } catch {
-      toast.error('Failed to check expired peers', {
-        description: 'Network error, please try again later',
+      toast.error(tToast('failedToCheckExpired'), {
+        description: tToast('networkError'),
       });
     } finally {
       setActionLoading(false);
@@ -129,12 +133,12 @@ export default function AdminPage() {
     }
 
     setActionLoading(true);
-    const actionLabels = {
-      enable: 'Enable',
-      disable: 'Disable',
-      renew: 'Renew',
+    const actionToastKeys = {
+      enable: 'peerEnabled',
+      disable: 'peerDisabled',
+      renew: 'peerRenewed',
     };
-    const label = actionLabels[action];
+    const toastKey = actionToastKeys[action];
 
     try {
       const res = await fetch(`/api/admin/peers/${username}`, {
@@ -146,18 +150,16 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success(`${label} successful`, {
-          description: `Successfully ${action}d configuration for user ${username}`,
-        });
+        toast.success(tToast(toastKey as 'peerEnabled' | 'peerDisabled' | 'peerRenewed'));
         await fetchPeers();
       } else {
         toast.error(`Failed to ${action}`, {
-          description: data.error || 'Please try again later',
+          description: data.error || tToast('tryAgainLater'),
         });
       }
     } catch {
       toast.error(`Failed to ${action}`, {
-        description: 'Network error, please try again later',
+        description: tToast('networkError'),
       });
     } finally {
       setActionLoading(false);
@@ -177,18 +179,16 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success('Delete successful', {
-          description: `Successfully deleted configuration for user ${username}`,
-        });
+        toast.success(tToast('peerDeleted'));
         await fetchPeers();
       } else {
-        toast.error('Failed to delete', {
-          description: data.error || 'Please try again later',
+        toast.error(tToast('failedToDelete'), {
+          description: data.error || tToast('tryAgainLater'),
         });
       }
     } catch {
-      toast.error('Failed to delete', {
-        description: 'Network error, please try again later',
+      toast.error(tToast('failedToDelete'), {
+        description: tToast('networkError'),
       });
     } finally {
       setActionLoading(false);
@@ -225,19 +225,17 @@ export default function AdminPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success('Public key updated successfully', {
-          description: `Updated public key for user ${username}`,
-        });
+        toast.success(tToast('keyUpdated'));
         setNewPublicKey('');
         await fetchPeers();
       } else {
-        toast.error('Failed to update public key', {
-          description: data.error || 'Please try again later',
+        toast.error(tToast('failedToUpdateKey'), {
+          description: data.error || tToast('tryAgainLater'),
         });
       }
     } catch {
-      toast.error('Failed to update public key', {
-        description: 'Network error, please try again later',
+      toast.error(tToast('failedToUpdateKey'), {
+        description: tToast('networkError'),
       });
     } finally {
       setActionLoading(false);
@@ -262,12 +260,12 @@ export default function AdminPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Management Actions</CardTitle>
+                    <CardTitle>{t('actions.title')}</CardTitle>
                   </div>
                   <Link href="/admin/template">
                     <Button variant="outline" size="sm">
                       <Settings className="w-4 h-4 mr-2" />
-                      Template
+                      {t('actions.templateButton')}
                     </Button>
                   </Link>
                 </div>
@@ -275,18 +273,18 @@ export default function AdminPage() {
               <CardContent className="flex gap-2">
                 <Button disabled>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
+                  {t('actions.refresh')}
                 </Button>
                 <Button disabled variant="outline">
                   <AlertTriangle className="w-4 h-4 mr-2" />
-                  Check & Disable Expired
+                  {t('actions.checkExpired')}
                 </Button>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>All Peers</CardTitle>
-                <CardDescription>Manage all WireGuard peer configurations</CardDescription>
+                <CardTitle>{t('peers.title')}</CardTitle>
+                <CardDescription>{t('peers.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <PeerTableSkeleton />
@@ -316,7 +314,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Peers</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t('stats.totalPeers')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -325,7 +323,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t('stats.active')}</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -334,7 +332,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Expiring Soon</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t('stats.expiringSoon')}</CardTitle>
                 <Clock className="h-4 w-4 text-yellow-600" />
               </CardHeader>
               <CardContent>
@@ -343,7 +341,7 @@ export default function AdminPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Expired</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t('stats.expired')}</CardTitle>
                 <AlertIcon className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -357,13 +355,13 @@ export default function AdminPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Management Actions</CardTitle>
-                  <CardDescription>Administrative operations</CardDescription>
+                  <CardTitle>{t('actions.title')}</CardTitle>
+                  <CardDescription>{t('actions.description')}</CardDescription>
                 </div>
                 <Link href="/admin/template">
                   <Button variant="outline" size="sm">
                     <Settings className="w-4 h-4 mr-2" />
-                    Template Settings
+                    {t('actions.templateButton')}
                   </Button>
                 </Link>
               </div>
@@ -371,11 +369,11 @@ export default function AdminPage() {
             <CardContent className="flex gap-2">
               <Button onClick={fetchPeers} disabled={actionLoading}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
+                {t('actions.refresh')}
               </Button>
               <Button onClick={handleCheckExpired} disabled={actionLoading} variant="outline">
                 <AlertTriangle className="w-4 h-4 mr-2" />
-                Check & Disable Expired
+                {t('actions.checkExpired')}
               </Button>
             </CardContent>
           </Card>
@@ -383,8 +381,8 @@ export default function AdminPage() {
           {/* Peers Table */}
           <Card>
             <CardHeader>
-              <CardTitle>All Peers</CardTitle>
-              <CardDescription>Manage all WireGuard peer configurations</CardDescription>
+              <CardTitle>{t('peers.title')}</CardTitle>
+              <CardDescription>{t('peers.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <PeerTable
@@ -401,15 +399,15 @@ export default function AdminPage() {
       <Dialog open={editKeyDialog.open} onOpenChange={(open) => setEditKeyDialog({ ...editKeyDialog, open })}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Public Key</DialogTitle>
+            <DialogTitle>{t('updateKeyDialog.title')}</DialogTitle>
             <DialogDescription>
-              Update the WireGuard public key for user{' '}
+              {t('updateKeyDialog.description')}{' '}
               <span className="font-semibold text-foreground">{editKeyDialog.username}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="currentKey">Current Public Key</Label>
+              <Label htmlFor="currentKey">{t('updateKeyDialog.currentKey')}</Label>
               <Input
                 id="currentKey"
                 value={editKeyDialog.currentKey}
@@ -418,10 +416,10 @@ export default function AdminPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="newKey">New Public Key</Label>
+              <Label htmlFor="newKey">{t('updateKeyDialog.newKey')}</Label>
               <Input
                 id="newKey"
-                placeholder="Enter new public key..."
+                placeholder={t('updateKeyDialog.newKeyPlaceholder')}
                 value={newPublicKey}
                 onChange={(e) => {
                   setNewPublicKey(e.target.value);
@@ -436,7 +434,7 @@ export default function AdminPage() {
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Should be 44 characters and end with &apos;=&apos;
+                  {t('updateKeyDialog.hint')}
                 </p>
               )}
             </div>
@@ -446,13 +444,13 @@ export default function AdminPage() {
               variant="outline"
               onClick={() => setEditKeyDialog({ open: false, username: '', currentKey: '' })}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleUpdateKey}
               disabled={!newPublicKey.trim() || actionLoading}
             >
-              {actionLoading ? 'Updating...' : 'Update Key'}
+              {actionLoading ? t('updateKeyDialog.updating') : t('updateKeyDialog.updateButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -462,22 +460,22 @@ export default function AdminPage() {
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Configuration?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the WireGuard configuration for user{' '}
+              {t('deleteDialog.description')}{' '}
               <span className="font-semibold text-foreground">{deleteDialog.username}</span>?
               <br />
               <br />
-              This action cannot be undone. The user will need to create a new configuration to connect to the VPN again.
+              {t('deleteDialog.warningLine1')} {t('deleteDialog.warningLine2')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

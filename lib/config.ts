@@ -7,6 +7,11 @@ import { z } from 'zod';
  */
 
 const configSchema = z.object({
+  // Application Configuration
+  app: z.object({
+    name: z.string().default('WireGuard Manager'),
+  }),
+
   // LDAP Configuration
   ldap: z.object({
     url: z.string().url({ message: 'LDAP_URL must be a valid URL (e.g., ldap://localhost:389)' }),
@@ -64,6 +69,9 @@ function loadConfig() {
     const allowedIPs = allowedIPsRaw.split(',').map(ip => ip.trim());
 
     const rawConfig = {
+      app: {
+        name: process.env.APP_NAME,
+      },
       ldap: {
         url: process.env.LDAP_URL,
         bindDN: process.env.LDAP_BIND_DN,

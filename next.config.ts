@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    // Expose NEXT_PUBLIC_APP_NAME at build time
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'WireGuard Manager',
+  },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

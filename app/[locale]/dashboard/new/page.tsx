@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Copy, Check, ArrowRight, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/routing';
 import { toast } from 'sonner';
 import { UI_TIMEOUTS } from '@/lib/constants';
 import { LoadingPage } from '@/components/loading-skeletons';
 import { Input } from '@/components/ui/input';
 import { validateWireGuardPublicKey } from '@/lib/validation/wireguard';
+import { useTranslations } from 'next-intl';
 
 export default function NewConfigPage() {
+  const t = useTranslations('dashboardNew');
+  const tToast = useTranslations('toast');
+  const tCommon = useTranslations('common');
   const { status } = useSession();
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
@@ -39,7 +42,7 @@ export default function NewConfigPage() {
         .then(data => {
           if (data.success && data.data) {
             // User already has config, redirect to dashboard
-            toast.error('You already have a configuration. Redirecting to dashboard...');
+            toast.error('You already have a configuration. Redirecting to dashboard...');  // Keep as is - edge case message
             router.push('/dashboard');
           } else {
             // User doesn't have config, allow access
@@ -81,15 +84,15 @@ export default function NewConfigPage() {
           const configText = await configRes.text();
           setGeneratedConfig(configText);
           setStep(2);
-          toast.success('Configuration created successfully!');
+          toast.success(tToast('configCreated'));
         } else {
-          toast.error('Failed to generate config file');
+          toast.error(tToast('failedToCreate'));
         }
       } else {
-        toast.error('Failed to create config: ' + data.error);
+        toast.error(tToast('failedToCreate') + ': ' + data.error);
       }
     } catch {
-      toast.error('Failed to create config');
+      toast.error(tToast('failedToCreate'));
     } finally {
       setLoading(false);
     }
@@ -111,9 +114,9 @@ export default function NewConfigPage() {
       await navigator.clipboard.writeText(generatedConfig);
       setCopied(true);
       setTimeout(() => setCopied(false), UI_TIMEOUTS.COPY_FEEDBACK_MS);
-      toast.success('Configuration copied to clipboard!');
+      toast.success(tToast('configCopied'));
     } catch {
-      toast.error('Failed to copy to clipboard');
+      toast.error(tToast('failedToCopy'));
     }
   };
 
@@ -130,9 +133,9 @@ export default function NewConfigPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Create New WireGuard Configuration</h2>
+            <h2 className="text-3xl font-bold mb-2">{t('title')}</h2>
             <p className="text-muted-foreground">
-              Follow these steps to set up your WireGuard VPN connection
+              {t('description')}
             </p>
           </div>
 
@@ -193,17 +196,17 @@ export default function NewConfigPage() {
               {/* Form */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Submit Your Public Key</CardTitle>
+                  <CardTitle>{t('publicKeyLabel')}</CardTitle>
                   <CardDescription>
-                    Paste your WireGuard public key below
+                    {t('publicKeyPlaceholder')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="publicKey">Public Key</Label>
+                    <Label htmlFor="publicKey">{t('publicKeyLabel')}</Label>
                     <Input
                       id="publicKey"
-                      placeholder="Paste your public key here..."
+                      placeholder={t('publicKeyPlaceholder')}
                       value={publicKey}
                       onChange={(e) => handlePublicKeyChange(e.target.value)}
                       className={`font-mono text-sm ${keyError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
@@ -224,7 +227,7 @@ export default function NewConfigPage() {
                     disabled={loading || !publicKey.trim()}
                     className="w-full"
                   >
-                    {loading ? 'Creating Configuration...' : 'Generate Configuration'}
+                    {loading ? t('creating') : t('createButton')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </CardContent>
@@ -291,12 +294,12 @@ export default function NewConfigPage() {
                         {copied ? (
                           <>
                             <Check className="w-4 h-4 mr-2" />
-                            Copied!
+                            {tCommon('copied')}
                           </>
                         ) : (
                           <>
                             <Copy className="w-4 h-4 mr-2" />
-                            Copy
+                            {tCommon('copy')}
                           </>
                         )}
                       </Button>
@@ -311,7 +314,7 @@ export default function NewConfigPage() {
                   <div className="flex justify-end">
                     <Link href="/dashboard">
                       <Button size="lg">
-                        Go to Dashboard
+                        {t('backButton')}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>

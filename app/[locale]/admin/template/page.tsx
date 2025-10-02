@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,6 +11,8 @@ import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Session } from 'next-auth';
 import { LoadingPage } from '@/components/loading-skeletons';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 
 interface ExtendedSession extends Session {
   user: Session['user'] & {
@@ -27,6 +28,8 @@ interface TemplateConfig {
 }
 
 export default function TemplateConfigPage() {
+  const t = useTranslations('template');
+  const tToast = useTranslations('toast');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -89,12 +92,12 @@ export default function TemplateConfigPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success('Template saved successfully! New configurations will use these settings.');
+        toast.success(tToast('templateSaved'));
       } else {
-        toast.error('Failed to save template: ' + data.error);
+        toast.error(tToast('failedToSave') + ': ' + data.error);
       }
     } catch {
-      toast.error('Failed to save template');
+      toast.error(tToast('failedToSave'));
     } finally {
       setLoading(false);
     }
@@ -113,26 +116,26 @@ export default function TemplateConfigPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-6">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Global Configuration Template</h2>
+            <h2 className="text-3xl font-bold mb-2">{t('title')}</h2>
             <p className="text-muted-foreground">
-              Set the default configuration that will be used for all new user configurations
+              {t('description')}
             </p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Template Settings</CardTitle>
+              <CardTitle>{t('title')}</CardTitle>
               <CardDescription>
-                These settings will be applied to all newly created user configurations
+                {t('description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="dns">DNS Server</Label>
+                  <Label htmlFor="dns">{t('dns')}</Label>
                   <Input
                     id="dns"
-                    placeholder="1.1.1.1"
+                    placeholder={t('dnsPlaceholder')}
                     value={config.dns}
                     onChange={(e) => setConfig({ ...config, dns: e.target.value })}
                   />
@@ -142,10 +145,10 @@ export default function TemplateConfigPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="allowedIPs">Allowed IPs</Label>
+                  <Label htmlFor="allowedIPs">{t('allowedIPs')}</Label>
                   <Textarea
                     id="allowedIPs"
-                    placeholder="0.0.0.0/0"
+                    placeholder={t('allowedIPsPlaceholder')}
                     value={config.allowedIPs}
                     onChange={(e) => setConfig({ ...config, allowedIPs: e.target.value })}
                     rows={3}
@@ -156,10 +159,10 @@ export default function TemplateConfigPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endpoint">Endpoint</Label>
+                  <Label htmlFor="endpoint">{t('endpoint')}</Label>
                   <Input
                     id="endpoint"
-                    placeholder="vpn.example.com:13231"
+                    placeholder={t('endpointPlaceholder')}
                     value={config.endpoint}
                     onChange={(e) => setConfig({ ...config, endpoint: e.target.value })}
                   />
@@ -169,11 +172,11 @@ export default function TemplateConfigPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="keepalive">Persistent Keepalive (seconds)</Label>
+                  <Label htmlFor="keepalive">{t('keepalive')}</Label>
                   <Input
                     id="keepalive"
                     type="number"
-                    placeholder="25"
+                    placeholder={t('keepalivePlaceholder')}
                     value={config.persistentKeepalive}
                     onChange={(e) => setConfig({ ...config, persistentKeepalive: parseInt(e.target.value) || 25 })}
                   />
@@ -184,7 +187,7 @@ export default function TemplateConfigPage() {
 
                 <Button type="submit" className="w-full" disabled={loading}>
                   <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Saving...' : 'Save Global Template'}
+                  {loading ? t('saving') : t('saveButton')}
                 </Button>
               </form>
             </CardContent>

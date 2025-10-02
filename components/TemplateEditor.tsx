@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 interface TemplateConfig {
   dns: string;
@@ -20,6 +21,7 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
+  const t = useTranslations('template');
   // NOTE: These UI defaults should match the server-side defaults in @/lib/config
   const [config, setConfig] = useState<TemplateConfig>({
     dns: defaultValues?.dns || '1.1.1.1',
@@ -36,18 +38,18 @@ export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Customize Configuration</CardTitle>
+        <CardTitle>{t('title')}</CardTitle>
         <CardDescription>
-          Adjust these settings to customize your WireGuard configuration
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="dns">DNS Server</Label>
+            <Label htmlFor="dns">{t('dns')}</Label>
             <Input
               id="dns"
-              placeholder="1.1.1.1"
+              placeholder={t('dnsPlaceholder')}
               value={config.dns}
               onChange={(e) => setConfig({ ...config, dns: e.target.value })}
             />
@@ -57,10 +59,10 @@ export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="allowedIPs">Allowed IPs</Label>
+            <Label htmlFor="allowedIPs">{t('allowedIPs')}</Label>
             <Textarea
               id="allowedIPs"
-              placeholder="10.10.10.0/24, 10.0.0.0/24"
+              placeholder={t('allowedIPsPlaceholder')}
               value={config.allowedIPs}
               onChange={(e) => setConfig({ ...config, allowedIPs: e.target.value })}
               rows={3}
@@ -71,10 +73,10 @@ export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="endpoint">Endpoint</Label>
+            <Label htmlFor="endpoint">{t('endpoint')}</Label>
             <Input
               id="endpoint"
-              placeholder="vpn.example.com:13231"
+              placeholder={t('endpointPlaceholder')}
               value={config.endpoint}
               onChange={(e) => setConfig({ ...config, endpoint: e.target.value })}
             />
@@ -84,11 +86,11 @@ export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="keepalive">Persistent Keepalive (seconds)</Label>
+            <Label htmlFor="keepalive">{t('keepalive')}</Label>
             <Input
               id="keepalive"
               type="number"
-              placeholder="25"
+              placeholder={t('keepalivePlaceholder')}
               value={config.persistentKeepalive}
               onChange={(e) => setConfig({ ...config, persistentKeepalive: parseInt(e.target.value) || 25 })}
             />
@@ -98,7 +100,7 @@ export function TemplateEditor({ defaultValues, onSave }: TemplateEditorProps) {
           </div>
 
           <Button type="submit" className="w-full">
-            Save Configuration
+            {t('saveButton')}
           </Button>
         </form>
       </CardContent>

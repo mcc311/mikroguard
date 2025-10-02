@@ -2,8 +2,9 @@
 
 import { Shield, Settings, LogOut, User, ChevronDown } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@/i18n/routing';
+import { usePathname } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,23 +14,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 interface AppHeaderProps {
   userName?: string | null;
   isAdmin?: boolean;
+  locale: string;
 }
 
-export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
+export function AppHeader({ userName, isAdmin, locale }: AppHeaderProps) {
   const pathname = usePathname();
+  const t = useTranslations('common');
+  const tNav = useTranslations('navigation');
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'WireGuard Manager';
 
   // Check if current page is an admin page
   const isAdminPage = pathname.startsWith('/admin');
 
   const getBreadcrumbs = () => {
-    if (pathname === '/dashboard') return [{ label: 'Dashboard', href: '/dashboard' }];
-    if (pathname === '/dashboard/new') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'New Configuration', href: '/dashboard/new' }];
-    if (pathname === '/admin') return [{ label: 'Admin Panel', href: '/admin' }];
-    if (pathname === '/admin/template') return [{ label: 'Admin Panel', href: '/admin' }, { label: 'Template Settings', href: '/admin/template' }];
+    if (pathname === '/dashboard') return [{ label: tNav('dashboard'), href: '/dashboard' }];
+    if (pathname === '/dashboard/new') return [{ label: tNav('dashboard'), href: '/dashboard' }, { label: tNav('newConfiguration'), href: '/dashboard/new' }];
+    if (pathname === '/admin') return [{ label: tNav('adminPanel'), href: '/admin' }];
+    if (pathname === '/admin/template') return [{ label: tNav('adminPanel'), href: '/admin' }, { label: tNav('templateSettings'), href: '/admin/template' }];
     return [];
   };
 
@@ -44,7 +50,7 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg hidden sm:inline">WireGuard Manager</span>
+            <span className="font-bold text-lg hidden sm:inline">{appName}</span>
           </Link>
 
           {/* Breadcrumbs */}
@@ -69,8 +75,11 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
           )}
         </div>
 
-        {/* Right: User Menu */}
+        {/* Right: Language Switcher + User Menu */}
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher currentLocale={locale} />
+
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -86,7 +95,7 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{userName}</p>
-                  <p className="text-xs text-muted-foreground">{isAdmin ? 'Administrator' : 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{isAdmin ? t('administrator') : t('user')}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -94,7 +103,7 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    Dashboard
+                    {tNav('dashboard')}
                   </Link>
                 </DropdownMenuItem>
               ) : (
@@ -102,7 +111,7 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
                   <DropdownMenuItem asChild>
                     <Link href="/admin" className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
-                      Admin Panel
+                      {tNav('adminPanel')}
                     </Link>
                   </DropdownMenuItem>
                 )
@@ -110,10 +119,10 @@ export function AppHeader({ userName, isAdmin }: AppHeaderProps) {
               {(isAdminPage || isAdmin) && <DropdownMenuSeparator />}
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => signOut({ callbackUrl: '/login' })}
+                onClick={() => signOut({ callbackUrl: `/${locale}/login` })}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
+                {t('signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -2,15 +2,20 @@
 
 import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, User, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
+import { config } from '@/lib/config';
 
 function LoginForm() {
+  const t = useTranslations('login');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
@@ -31,13 +36,13 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError('Invalid username or password');
+        setError(t('invalidCredentials'));
       } else {
         const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
         router.push(callbackUrl);
       }
     } catch {
-      setError('An error occurred during login');
+      setError(t('errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -61,9 +66,9 @@ function LoginForm() {
             </div>
           </div>
           <div className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold tracking-tight">WireGuard Manager</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">{config.app.name}</CardTitle>
             <CardDescription className="text-base">
-              Sign in with your LDAP credentials to manage VPN configurations
+              {t('description')}
             </CardDescription>
           </div>
         </CardHeader>
@@ -71,13 +76,13 @@ function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium">
-                Username
+                {t('username')}
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
-                  placeholder="Enter your username"
+                  placeholder={t('usernamePlaceholder')}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -88,14 +93,14 @@ function LoginForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
-                Password
+                {t('password')}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={t('passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -113,10 +118,10 @@ function LoginForm() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t('signingIn')}
                 </>
               ) : (
-                'Sign In'
+                tCommon('signIn')
               )}
             </Button>
           </form>
@@ -126,29 +131,33 @@ function LoginForm() {
   );
 }
 
+function LoginFallback() {
+  const tCommon = useTranslations('common');
+
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+      <Card className="w-full max-w-md relative z-10 border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
+        <CardHeader className="space-y-3 pb-6">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+              <Shield className="w-8 h-8 text-primary-foreground" />
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <CardTitle className="text-3xl font-bold tracking-tight">{config.app.name}</CardTitle>
+            <CardDescription className="text-base">{tCommon('loading')}</CardDescription>
+          </div>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-          <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <Card className="w-full max-w-md relative z-10 border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
-            <CardHeader className="space-y-3 pb-6">
-              <div className="flex justify-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
-                  <Shield className="w-8 h-8 text-primary-foreground" />
-                </div>
-              </div>
-              <div className="text-center space-y-2">
-                <CardTitle className="text-3xl font-bold tracking-tight">WireGuard Manager</CardTitle>
-                <CardDescription className="text-base">Loading...</CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoginFallback />}>
       <LoginForm />
     </Suspense>
   );

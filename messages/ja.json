@@ -1,0 +1,187 @@
+{
+  "common": {
+    "appName": "WireGuard Manager",
+    "loading": "読み込み中...",
+    "refresh": "更新",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "save": "保存",
+    "update": "更新",
+    "create": "作成",
+    "signIn": "サインイン",
+    "signOut": "サインアウト",
+    "user": "ユーザー",
+    "admin": "管理者",
+    "administrator": "管理者",
+    "copied": "コピーしました!",
+    "copy": "コピー"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "adminPanel": "管理パネル",
+    "templateSettings": "テンプレート設定",
+    "newConfiguration": "新規設定"
+  },
+  "login": {
+    "title": "WireGuard Manager",
+    "description": "LDAP 認証情報でサインインして VPN 設定を管理",
+    "username": "ユーザー名",
+    "usernamePlaceholder": "ユーザー名を入力",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "signingIn": "サインイン中...",
+    "invalidCredentials": "ユーザー名またはパスワードが無効です",
+    "errorOccurred": "ログイン中にエラーが発生しました"
+  },
+  "dashboard": {
+    "title": "VPN 設定",
+    "description": "WireGuard 接続の詳細",
+    "ipAddress": "IP アドレス",
+    "expires": "有効期限",
+    "created": "作成日時",
+    "publicKey": "公開鍵",
+    "updateKey": "更新",
+    "renewConfiguration": "設定を更新",
+    "updateKeyButton": "鍵を更新",
+    "deleteButton": "削除",
+    "noPeer": {
+      "title": "VPN 設定がありません",
+      "description": "まだ WireGuard 設定を作成していません。今すぐ作成して安全な VPN アクセスを開始しましょう。",
+      "createButton": "設定を作成"
+    },
+    "configFile": {
+      "title": "設定ファイル",
+      "description": "これを WireGuard クライアントにコピーしてください"
+    },
+    "updateKeyDialog": {
+      "title": "公開鍵を更新",
+      "description": "新しい WireGuard 公開鍵を入力してください。デバイスを変更したり、鍵を再生成したりする場合に便利です。",
+      "label": "公開鍵",
+      "placeholder": "新しい公開鍵を入力...",
+      "hint": "公開鍵は 44 文字で '=' で終わる必要があります",
+      "updating": "更新中..."
+    },
+    "deleteDialog": {
+      "title": "設定を削除しますか？",
+      "description": "WireGuard 設定を削除してもよろしいですか？この操作は元に戻せません。VPN に再接続するには新しい設定を作成する必要があります。"
+    }
+  },
+  "dashboardNew": {
+    "title": "VPN 設定を作成",
+    "description": "新しい WireGuard 設定を生成",
+    "publicKeyLabel": "公開鍵",
+    "publicKeyPlaceholder": "WireGuard 公開鍵を入力",
+    "publicKeyHint": "以下のコマンドで生成:",
+    "publicKeyCommand": "wg genkey | wg pubkey",
+    "creating": "作成中...",
+    "createButton": "設定を作成",
+    "backButton": "ダッシュボードに戻る"
+  },
+  "admin": {
+    "stats": {
+      "totalPeers": "総ピア数",
+      "active": "アクティブ",
+      "expiringSoon": "まもなく期限切れ",
+      "expired": "期限切れ"
+    },
+    "actions": {
+      "title": "管理操作",
+      "description": "管理者操作",
+      "refresh": "更新",
+      "checkExpired": "期限切れを確認して無効化",
+      "templateButton": "テンプレート設定"
+    },
+    "peers": {
+      "title": "全ピア",
+      "description": "すべての WireGuard ピア設定を管理"
+    },
+    "updateKeyDialog": {
+      "title": "公開鍵を更新",
+      "description": "ユーザーの WireGuard 公開鍵を更新",
+      "currentKey": "現在の公開鍵",
+      "newKey": "新しい公開鍵",
+      "newKeyPlaceholder": "新しい公開鍵を入力...",
+      "hint": "44 文字で '=' で終わる必要があります",
+      "updating": "更新中...",
+      "updateButton": "鍵を更新"
+    },
+    "deleteDialog": {
+      "title": "設定を削除しますか？",
+      "description": "ユーザーの WireGuard 設定を削除してもよろしいですか",
+      "warningLine1": "この操作は元に戻せません。",
+      "warningLine2": "ユーザーは VPN に再接続するために新しい設定を作成する必要があります。"
+    }
+  },
+  "peerTable": {
+    "username": "ユーザー名",
+    "ipAddress": "IP アドレス",
+    "status": "ステータス",
+    "expires": "有効期限",
+    "created": "作成日時",
+    "publicKey": "公開鍵",
+    "actions": "操作",
+    "active": "アクティブ",
+    "disabled": "無効",
+    "expired": "期限切れ",
+    "expiringSoon": "まもなく期限切れ",
+    "enable": "有効化",
+    "disable": "無効化",
+    "renew": "更新",
+    "updateKey": "鍵を更新",
+    "noPeers": "ピアが見つかりません"
+  },
+  "template": {
+    "title": "グローバルテンプレート設定",
+    "description": "新しい VPN 設定のデフォルト設定を構成",
+    "dns": "DNS サーバー",
+    "dnsPlaceholder": "8.8.8.8, 1.1.1.1",
+    "endpoint": "エンドポイント",
+    "endpointPlaceholder": "vpn.example.com:51820",
+    "allowedIPs": "許可された IP",
+    "allowedIPsPlaceholder": "0.0.0.0/0, ::/0",
+    "keepalive": "持続的キープアライブ",
+    "keepalivePlaceholder": "25",
+    "saving": "保存中...",
+    "saveButton": "テンプレートを保存",
+    "backButton": "管理画面に戻る"
+  },
+  "toast": {
+    "configRenewed": "設定が正常に更新されました!",
+    "configDeleted": "設定が正常に削除されました",
+    "configCreated": "設定が正常に作成されました!",
+    "keyUpdated": "公開鍵が正常に更新されました!",
+    "ipCopied": "IP アドレスをコピーしました!",
+    "publicKeyCopied": "公開鍵をコピーしました!",
+    "configCopied": "設定をクリップボードにコピーしました!",
+    "templateSaved": "テンプレート設定が正常に保存されました!",
+    "peerEnabled": "ピアが正常に有効化されました",
+    "peerDisabled": "ピアが正常に無効化されました",
+    "peerRenewed": "ピアが正常に更新されました",
+    "peerDeleted": "ピアが正常に削除されました",
+    "expiredDisabled": "{count} 個の期限切れピアを無効化しました",
+    "expiredDescription": "すべての期限切れ VPN 設定が自動的に無効化されました",
+    "failedToRenew": "設定の更新に失敗しました",
+    "failedToDelete": "設定の削除に失敗しました",
+    "failedToCreate": "設定の作成に失敗しました",
+    "failedToUpdateKey": "鍵の更新に失敗しました",
+    "failedToCopy": "クリップボードへのコピーに失敗しました",
+    "failedToSave": "テンプレートの保存に失敗しました",
+    "failedToCheckExpired": "期限切れピアの確認に失敗しました",
+    "networkError": "ネットワークエラー、後でもう一度お試しください",
+    "tryAgainLater": "後でもう一度お試しください"
+  },
+  "validation": {
+    "publicKeyRequired": "公開鍵は必須です",
+    "publicKeyLength": "公開鍵は正確に 44 文字である必要があります",
+    "publicKeyEnding": "公開鍵は \"=\" で終わる必要があります",
+    "publicKeyInvalid": "公開鍵に無効な文字が含まれています",
+    "publicKeyIdentical": "この鍵は現在の鍵と同じです",
+    "invalidPublicKey": "無効な公開鍵"
+  },
+  "errors": {
+    "unauthorized": "未認証",
+    "notFound": "見つかりません",
+    "serverError": "サーバーエラー",
+    "unknownError": "不明なエラーが発生しました"
+  }
+}
