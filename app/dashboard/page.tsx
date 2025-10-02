@@ -6,12 +6,20 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ConfigDisplay } from '@/components/ConfigDisplay';
-import { QRCodeDisplay } from '@/components/QRCodeDisplay';
-import { TemplateEditor } from '@/components/TemplateEditor';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { WireGuardPeer } from '@/types';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Shield, Plus, RefreshCw, Settings, Download } from 'lucide-react';
+import { Shield, Plus, RefreshCw, PenLine, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -20,8 +28,10 @@ export default function DashboardPage() {
   const [peer, setPeer] = useState<WireGuardPeer | null>(null);
   const [config, setConfig] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCustomize, setShowCustomize] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [newPublicKey, setNewPublicKey] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -37,48 +47,33 @@ export default function DashboardPage() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('/api/config/my');
-      const data = await res.json();
+      const [peerRes, configRes] = await Promise.all([
+        fetch('/api/config/my'),
+        fetch('/api/config/download'),
+      ]);
 
-      if (data.success) {
-        // Convert date strings to Date objects
-        const peerData = {
-          ...data.data,
-          createdAt: new Date(data.data.createdAt),
-          expiresAt: new Date(data.data.expiresAt),
+      const peerData = await peerRes.json();
+
+      if (peerData.success) {
+        const peer = {
+          ...peerData.data,
+          createdAt: new Date(peerData.data.createdAt),
+          expiresAt: new Date(peerData.data.expiresAt),
         };
-        setPeer(peerData);
+        setPeer(peer);
+
+        if (configRes.ok) {
+          const configText = await configRes.text();
+          setConfig(configText);
+        }
       } else {
         setPeer(null);
+        setConfig(null);
       }
     } catch (error) {
       console.error('Failed to fetch config:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateConfig = async (publicKey: string) => {
-    setActionLoading(true);
-    try {
-      const res = await fetch('/api/config/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicKey }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setConfig(data.data.configFile);
-        await fetchConfig();
-      } else {
-        alert('Failed to create config: ' + data.error);
-      }
-    } catch (error) {
-      alert('Failed to create config');
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -93,7 +88,6 @@ export default function DashboardPage() {
       const data = await res.json();
 
       if (data.success) {
-        setConfig(data.data.configFile);
         await fetchConfig();
         alert('Configuration renewed successfully!');
       } else {
@@ -106,24 +100,45 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDownloadConfig = async () => {
+  const handleUpdateKey = async () => {
+    if (!newPublicKey.trim()) {
+      alert('Please enter a valid public key');
+      return;
+    }
+
+    setActionLoading(true);
     try {
-      const res = await fetch('/api/config/download');
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${session?.user?.name || 'wireguard'}-config.conf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+      const res = await fetch('/api/config/update-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicKey: newPublicKey.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchConfig();
+        setShowKeyDialog(false);
+        setNewPublicKey('');
+        alert('Public key updated successfully!');
       } else {
-        alert('Failed to download config');
+        alert('Failed to update key: ' + data.error);
       }
     } catch (error) {
-      alert('Failed to download config');
+      alert('Failed to update key');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCopyConfig = async () => {
+    if (!config) return;
+    try {
+      await navigator.clipboard.writeText(config);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      alert('Failed to copy to clipboard');
     }
   };
 
@@ -200,19 +215,29 @@ export default function DashboardPage() {
                         </span>
                       </p>
                     </div>
+                    <div className="col-span-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">Public Key</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setNewPublicKey(peer.publicKey);
+                            setShowKeyDialog(true);
+                          }}
+                        >
+                          <PenLine className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="font-mono text-xs break-all bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        {peer.publicKey}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={handleDownloadConfig} disabled={actionLoading}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Config
-                    </Button>
                     <Button onClick={handleRenewConfig} disabled={actionLoading}>
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Renew (Extend 3 Months)
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowCustomize(!showCustomize)}>
-                      <Settings className="w-4 h-4 mr-2" />
-                      Customize
                     </Button>
                   </div>
                 </div>
@@ -232,29 +257,86 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Customize Config */}
-          {showCustomize && peer && (
-            <TemplateEditor
-              onSave={(cfg) => {
-                setShowCustomize(false);
-                // Would implement custom config download here
-                alert('Custom configuration saved!');
-              }}
-            />
-          )}
-
           {/* Config Display */}
           {peer && config && (
-            <>
-              <ConfigDisplay
-                config={config}
-                filename={`${session?.user?.name}-wireguard.conf`}
-              />
-              <QRCodeDisplay username={(session?.user as any)?.username} />
-            </>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Configuration</CardTitle>
+                    <CardDescription>Copy this configuration to your WireGuard client</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyConfig}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={config}
+                  readOnly
+                  className="font-mono text-xs h-64 resize-none"
+                />
+              </CardContent>
+            </Card>
           )}
         </div>
       </main>
+
+      {/* Public Key Edit Dialog */}
+      <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Update Public Key</DialogTitle>
+            <DialogDescription>
+              Enter your new WireGuard public key. This is useful when you change devices or regenerate your keys.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="publicKey">Public Key</Label>
+              <Input
+                id="publicKey"
+                placeholder="Enter your new public key..."
+                value={newPublicKey}
+                onChange={(e) => setNewPublicKey(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                The public key should be 44 characters long and end with '='
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowKeyDialog(false);
+                setNewPublicKey('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateKey} disabled={actionLoading}>
+              {actionLoading ? 'Updating...' : 'Update Key'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

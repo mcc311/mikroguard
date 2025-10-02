@@ -1,4 +1,5 @@
 import { WireGuardConfig } from '@/types';
+import { getGlobalTemplate } from '@/lib/store/template';
 
 /**
  * Build WireGuard configuration file content
@@ -20,14 +21,15 @@ PersistentKeepalive = ${config.persistentKeepalive}
 }
 
 /**
- * Get default config template
+ * Get default config template from global store
  */
 export function getDefaultTemplate(): Partial<WireGuardConfig> {
+  const template = getGlobalTemplate();
   return {
-    dns: process.env.WG_DNS || '1.1.1.1',
-    allowedIPs: (process.env.WG_DEFAULT_ALLOWED_IPS || '10.10.10.0/24').split(',').map(ip => ip.trim()),
-    endpoint: process.env.WG_ENDPOINT || '',
-    persistentKeepalive: parseInt(process.env.WG_PERSISTENT_KEEPALIVE || '25'),
+    dns: template.dns,
+    allowedIPs: template.allowedIPs,
+    endpoint: template.endpoint,
+    persistentKeepalive: template.persistentKeepalive,
     publicKey: process.env.WG_SERVER_PUBLIC_KEY || '',
   };
 }

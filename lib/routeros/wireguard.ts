@@ -123,6 +123,24 @@ export async function enablePeer(username: string): Promise<void> {
 }
 
 /**
+ * Update peer public key
+ */
+export async function updatePeerPublicKey(username: string, publicKey: string): Promise<void> {
+  const client = await getRouterOSClient();
+
+  const peers = await client.get('/interface/wireguard/peers');
+  const peer = peers.find((p) => p.name === username && p.interface === WG_INTERFACE);
+
+  if (!peer) {
+    throw new Error('Peer not found');
+  }
+
+  await client.patch(`/interface/wireguard/peers/${peer['.id']}`, {
+    'public-key': publicKey,
+  });
+}
+
+/**
  * Delete peer (admin only)
  */
 export async function deletePeer(username: string): Promise<void> {

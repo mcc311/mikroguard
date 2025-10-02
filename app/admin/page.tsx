@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { PeerTable } from '@/components/PeerTable';
 import { WireGuardPeer } from '@/types';
-import { Shield, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Shield, RefreshCw, AlertTriangle, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -137,6 +137,12 @@ export default function AdminPage() {
             <h1 className="text-xl font-bold">WireGuard Manager - Admin</h1>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/admin/template">
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Template Settings
+              </Button>
+            </Link>
             <Link href="/dashboard">
               <Button variant="outline" size="sm">
                 My Dashboard
