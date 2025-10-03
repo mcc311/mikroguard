@@ -54,7 +54,7 @@ export default function NewConfigPage() {
           setCheckingExisting(false);
         });
     }
-  }, [status, router]);
+  }, [status, router, t]);
 
   const handleSubmitPublicKey = async () => {
     const trimmedKey = publicKey.trim();

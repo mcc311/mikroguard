@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname, useRouter } from '@/i18n/routing';
-import { Globe } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

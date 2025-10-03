@@ -63,6 +63,35 @@ const configSchema = z.object({
 
 // Parse and validate environment variables
 function loadConfig() {
+  // Skip validation during Next.js build phase
+  // Environment variables are only needed at runtime in Docker
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return configSchema.parse({
+      app: { name: 'MikroGuard' },
+      ldap: {
+        url: 'ldap://placeholder',
+        bindDN: 'cn=placeholder',
+        bindPassword: 'placeholder',
+        searchBase: 'dc=placeholder',
+        adminGroup: 'placeholder',
+      },
+      wireguard: {
+        endpoint: 'placeholder:51820',
+      },
+      routeros: {
+        host: 'placeholder',
+        username: 'placeholder',
+        password: 'placeholder',
+      },
+      auth: {
+        secret: 'placeholder-secret-32-characters-long-at-least',
+      },
+      cron: {
+        secret: 'placeholder-cron-secret',
+      },
+    });
+  }
+
   try {
     // Parse allowed IPs from comma-separated string
     const allowedIPsRaw = process.env.WG_DEFAULT_ALLOWED_IPS || '0.0.0.0/0';
