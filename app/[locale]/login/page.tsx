@@ -37,8 +37,13 @@ function LoginForm() {
       if (result?.error) {
         setError(t('invalidCredentials'));
       } else {
-        const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-        router.push(callbackUrl);
+        let callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
+        // Strip locale prefix if present (e.g., /en/dashboard -> /dashboard)
+        // The i18n router will add the correct locale automatically
+        callbackUrl = callbackUrl.replace(/^\/(en|zh-TW|ja)/, '');
+
+        router.push(callbackUrl || '/dashboard');
       }
     } catch {
       setError(t('errorOccurred'));
