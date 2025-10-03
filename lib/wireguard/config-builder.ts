@@ -1,6 +1,6 @@
 import { WireGuardConfig } from '@/types';
 import { getGlobalTemplate } from '@/lib/store/template';
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 import { UI_TEXT } from '@/lib/constants';
 
 /**
@@ -32,7 +32,7 @@ export function getDefaultTemplate(): Partial<WireGuardConfig> {
     allowedIPs: template.allowedIPs,
     endpoint: template.endpoint,
     persistentKeepalive: template.persistentKeepalive,
-    publicKey: config.wireguard.serverPublicKey || '',
+    publicKey: getConfig().wireguard.serverPublicKey || '',
   };
 }
 

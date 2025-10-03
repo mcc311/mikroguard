@@ -1,122 +1,108 @@
-import ldap, { SearchOptions, Client } from 'ldapjs';
+import { Client } from 'ldapts';
 import { User } from '@/types';
-import { config, type LDAPConfig } from '@/lib/config';
-
-interface LDAPAttribute {
-  type: string;
-  values: string[];
-}
-
-interface LDAPSearchEntry {
-  objectName?: string;
-  attributes: LDAPAttribute[];
-}
+import { getConfig, type LDAPConfig } from '@/lib/config';
 
 function getLDAPConfig(): LDAPConfig {
-  return config.ldap;
+  return getConfig().ldap;
 }
 
 /**
- * Authenticate user via LDAP
+ * Authenticate user via LDAP using ldapts
  */
 export async function authenticateUser(username: string, password: string): Promise<User | null> {
   const config = getLDAPConfig();
-
-  return new Promise((resolve, reject) => {
-    const client: Client = ldap.createClient({
-      url: config.url,
-    });
-
-    // First, bind with admin credentials to search for user
-    client.bind(config.bindDN, config.bindPassword, (bindErr) => {
-      if (bindErr) {
-        client.unbind();
-        return reject(new Error('LDAP bind failed: ' + bindErr.message));
-      }
-
-      const searchOptions: SearchOptions = {
-        filter: `(uid=${username})`,
-        scope: 'sub',
-        attributes: ['dn', 'uid', 'cn', 'mail', 'memberOf'],
-      };
-
-      client.search(config.searchBase, searchOptions, (searchErr, searchRes) => {
-        if (searchErr) {
-          client.unbind();
-          return reject(new Error('LDAP search failed: ' + searchErr.message));
-        }
-
-        let userDN: string | null = null;
-        let userAttributes: Record<string, string | string[] | undefined> = {};
-
-        searchRes.on('searchEntry', (entry) => {
-          userDN = entry.objectName ? String(entry.objectName) : null;
-          const ldapEntry = entry as unknown as LDAPSearchEntry;
-          userAttributes = {
-            uid: ldapEntry.attributes.find((a) => a.type === 'uid')?.values[0],
-            cn: ldapEntry.attributes.find((a) => a.type === 'cn')?.values[0],
-            mail: ldapEntry.attributes.find((a) => a.type === 'mail')?.values[0],
-            memberOf: ldapEntry.attributes.find((a) => a.type === 'memberOf')?.values,
-          };
-        });
-
-        searchRes.on('error', (err) => {
-          client.unbind();
-          reject(new Error('LDAP search error: ' + err.message));
-        });
-
-        searchRes.on('end', () => {
-          if (!userDN) {
-            client.unbind();
-            return resolve(null);
-          }
-
-          // Now bind with user credentials to verify password
-          const userClient: Client = ldap.createClient({
-            url: config.url,
-          });
-
-          userClient.bind(userDN, password, (userBindErr) => {
-            userClient.unbind();
-            client.unbind();
-
-            if (userBindErr) {
-              return resolve(null);
-            }
-
-            // Check if user is admin
-            const isAdmin = checkIfAdmin(userAttributes.memberOf, config.adminGroup);
-
-            const user: User = {
-              username: (Array.isArray(userAttributes.uid) ? userAttributes.uid[0] : userAttributes.uid) || '',
-              displayName: (Array.isArray(userAttributes.cn) ? userAttributes.cn[0] : userAttributes.cn) || '',
-              email: (Array.isArray(userAttributes.mail) ? userAttributes.mail[0] : userAttributes.mail) || '',
-              isAdmin,
-            };
-
-            resolve(user);
-          });
-        });
-      });
-    });
-
-    client.on('error', (err) => {
-      client.unbind();
-      reject(new Error('LDAP connection error: ' + err.message));
-    });
+  const client = new Client({
+    url: config.url,
+    timeout: 5000,
+    connectTimeout: 5000,
   });
+
+  try {
+    // First, bind with admin credentials to search for user
+    await client.bind(config.bindDN, config.bindPassword);
+
+    // Search for the user
+    const { searchEntries } = await client.search(config.searchBase, {
+      filter: `(uid=${username})`,
+      scope: 'sub',
+      attributes: ['dn', 'uid', 'cn', 'mail', 'memberOf'],
+    });
+
+    if (searchEntries.length === 0) {
+      await client.unbind();
+      return null;
+    }
+
+    const entry = searchEntries[0];
+    const userDN = entry.dn;
+
+    // Extract user attributes
+    const uid = Array.isArray(entry.uid) ? entry.uid[0] : entry.uid;
+    const cn = Array.isArray(entry.cn) ? entry.cn[0] : entry.cn;
+    const mail = Array.isArray(entry.mail) ? entry.mail[0] : entry.mail;
+    const memberOf = entry.memberOf;
+
+    // Unbind admin connection
+    await client.unbind();
+
+    // Now verify password by binding with user credentials
+    const userClient = new Client({
+      url: config.url,
+      timeout: 5000,
+      connectTimeout: 5000,
+    });
+
+    try {
+      await userClient.bind(userDN, password);
+      await userClient.unbind();
+    } catch {
+      // Invalid password
+      return null;
+    }
+
+    // Check if user is admin
+    // Convert memberOf to string/string[] if it's a Buffer
+    let memberOfString: string | string[] | undefined;
+    if (memberOf) {
+      if (Buffer.isBuffer(memberOf)) {
+        memberOfString = memberOf.toString('utf-8');
+      } else if (Array.isArray(memberOf)) {
+        memberOfString = memberOf.map(m => Buffer.isBuffer(m) ? m.toString('utf-8') : String(m));
+      } else {
+        memberOfString = String(memberOf);
+      }
+    }
+    const isAdmin = checkIfAdmin(memberOfString, config.adminGroup);
+
+    const user: User = {
+      username: String(uid || ''),
+      displayName: String(cn || ''),
+      email: String(mail || ''),
+      isAdmin,
+    };
+
+    return user;
+  } catch (error) {
+    try {
+      await client.unbind();
+    } catch {
+      // Ignore unbind errors
+    }
+    throw new Error('LDAP authentication failed: ' + (error as Error).message);
+  }
 }
 
 /**
  * Check if user is in admin group
  */
-function checkIfAdmin(memberOf: string | string[] | undefined, adminGroup: string): boolean {
+function checkIfAdmin(memberOf: string | string[] | undefined, adminGroup: string | undefined): boolean {
   if (!memberOf || !adminGroup) {
     return false;
   }
 
   const groups = Array.isArray(memberOf) ? memberOf : [memberOf];
-  return groups.some((group) => group.toLowerCase() === adminGroup.toLowerCase());
+  const adminGroupLower = adminGroup.toLowerCase();
+  return groups.some((group) => group && typeof group === 'string' && group.toLowerCase() === adminGroupLower);
 }
 
 /**
@@ -124,25 +110,22 @@ function checkIfAdmin(memberOf: string | string[] | undefined, adminGroup: strin
  */
 export async function validateLDAPConnection(): Promise<boolean> {
   const config = getLDAPConfig();
-
-  return new Promise((resolve) => {
-    const client: Client = ldap.createClient({
-      url: config.url,
-    });
-
-    client.bind(config.bindDN, config.bindPassword, (err) => {
-      if (err) {
-        client.unbind();
-        resolve(false);
-      } else {
-        client.unbind();
-        resolve(true);
-      }
-    });
-
-    client.on('error', () => {
-      client.unbind();
-      resolve(false);
-    });
+  const client = new Client({
+    url: config.url,
+    timeout: 5000,
+    connectTimeout: 5000,
   });
+
+  try {
+    await client.bind(config.bindDN, config.bindPassword);
+    await client.unbind();
+    return true;
+  } catch {
+    try {
+      await client.unbind();
+    } catch {
+      // Ignore unbind errors
+    }
+    return false;
+  }
 }

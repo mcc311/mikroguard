@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, User, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import { config } from '@/lib/config';
 
 function LoginForm() {
   const t = useTranslations('login');
@@ -66,7 +65,7 @@ function LoginForm() {
             </div>
           </div>
           <div className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold tracking-tight">{config.app.name}</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">MikroGuard</CardTitle>
             <CardDescription className="text-base">
               {t('description')}
             </CardDescription>
@@ -146,7 +145,7 @@ function LoginFallback() {
             </div>
           </div>
           <div className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold tracking-tight">{config.app.name}</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">MikroGuard</CardTitle>
             <CardDescription className="text-base">{tCommon('loading')}</CardDescription>
           </div>
         </CardHeader>

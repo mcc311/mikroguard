@@ -1,7 +1,7 @@
 import { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authenticateUser } from './ldap';
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 
 // Extend NextAuth types
 interface ExtendedUser extends NextAuthUser {
@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: config.auth.sessionMaxAge,
+    maxAge: getConfig().auth.sessionMaxAge,
   },
-  secret: config.auth.secret,
+  secret: getConfig().auth.secret,
 };

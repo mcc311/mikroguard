@@ -1,11 +1,11 @@
 import { getRouterOSClient } from './client';
 import { WireGuardPeer } from '@/types';
 import { addDays, getUnixTime, fromUnixTime } from 'date-fns';
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 import { logger } from '@/lib/logger';
 
-const WG_INTERFACE = config.wireguard.interfaceName;
-const EXPIRATION_DAYS = config.wireguard.expirationDays;
+const WG_INTERFACE = getConfig().wireguard.interfaceName;
+const EXPIRATION_DAYS = getConfig().wireguard.expirationDays;
 
 // RouterOS raw peer data structure
 interface RouterOSPeer {
@@ -175,7 +175,7 @@ async function getRawPeers(): Promise<RouterOSPeer[]> {
  * Get next available IP address in subnet
  */
 export async function getNextAvailableIP(): Promise<string> {
-  const subnet = config.wireguard.subnet;
+  const subnet = getConfig().wireguard.subnet;
   const [network] = subnet.split('/');
   const [a, b, c] = network.split('.').map(Number);
 
@@ -185,7 +185,7 @@ export async function getNextAvailableIP(): Promise<string> {
     rawPeers.map((peer) => peer['allowed-address'].split('/')[0])
   );
 
-  const { startIP, endIP, cidrSuffix } = config.wireguard.ipAllocation;
+  const { startIP, endIP, cidrSuffix } = getConfig().wireguard.ipAllocation;
 
   // Iterate through available IP range
   for (let i = startIP; i <= endIP; i++) {
@@ -252,8 +252,9 @@ export async function getServerPublicKeyOrFallback(): Promise<string> {
     return await getServerPublicKey();
   } catch {
     // Fallback to configured value if RouterOS call fails
-    if (config.wireguard.serverPublicKey) {
-      return config.wireguard.serverPublicKey;
+    const publicKey = getConfig().wireguard.serverPublicKey;
+    if (publicKey) {
+      return publicKey;
     }
     throw new Error('Server public key not available');
   }

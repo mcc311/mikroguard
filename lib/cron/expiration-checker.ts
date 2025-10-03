@@ -1,5 +1,5 @@
 import { checkExpiredPeers } from '../routeros/wireguard';
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 import { logger } from '@/lib/logger';
 
 /**
@@ -28,7 +28,7 @@ export async function runExpirationCheck(): Promise<void> {
  */
 export async function handleCronRequest(authToken?: string): Promise<{ success: boolean; message: string }> {
   // Verify auth token
-  if (authToken !== config.cron.secret) {
+  if (authToken !== getConfig().cron.secret) {
     return { success: false, message: 'Unauthorized' };
   }
 

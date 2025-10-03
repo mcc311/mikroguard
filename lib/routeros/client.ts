@@ -142,7 +142,7 @@ export class RouterOSClient {
 
 }
 
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 
 // Singleton instance
 let client: RouterOSClient | null = null;
@@ -150,11 +150,11 @@ let client: RouterOSClient | null = null;
 export async function getRouterOSClient(): Promise<RouterOSClient> {
   if (!client) {
     client = new RouterOSClient({
-      host: config.routeros.host,
-      port: config.routeros.port,
-      username: config.routeros.username,
-      password: config.routeros.password,
-      useTls: config.routeros.useTls,
+      host: getConfig().routeros.host,
+      port: getConfig().routeros.port,
+      username: getConfig().routeros.username,
+      password: getConfig().routeros.password,
+      useTls: getConfig().routeros.useTls,
     });
     await client.verifyConnection();
   }

@@ -3,7 +3,7 @@
  * This persists across requests in the Node.js runtime
  */
 
-import { config } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 
 interface TemplateConfig {
   dns: string;
@@ -15,10 +15,10 @@ interface TemplateConfig {
 // Global variable persists in memory during the Node.js process
 // Initialized from configuration
 let globalTemplate: TemplateConfig = {
-  dns: config.wireguard.dns,
-  allowedIPs: config.wireguard.allowedIPs,
-  endpoint: config.wireguard.endpoint,
-  persistentKeepalive: config.wireguard.persistentKeepalive,
+  dns: getConfig().wireguard.dns,
+  allowedIPs: getConfig().wireguard.allowedIPs,
+  endpoint: getConfig().wireguard.endpoint,
+  persistentKeepalive: getConfig().wireguard.persistentKeepalive,
 };
 
 export function getGlobalTemplate(): TemplateConfig {
